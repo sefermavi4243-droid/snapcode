@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QVBoxLayout,
 )
 
-from .. import hotkey
+from .. import autostart, hotkey
 from ..config import Settings
 from ..pipeline import ENGINES
 from .theme import app_icon
@@ -54,6 +54,10 @@ class SettingsDialog(QDialog):
             self.checks[field] = box
             form.addRow("", box)
 
+        self.autostart = QCheckBox("Windows ile başlat")
+        self.autostart.setChecked(autostart.is_enabled())
+        form.addRow("", self.autostart)
+
         self.error = QLabel(objectName="muted")
         buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
         buttons.button(QDialogButtonBox.Save).setText("Kaydet")
@@ -82,4 +86,6 @@ class SettingsDialog(QDialog):
         s.api_key = self.api_key.text().strip()
         for field, box in self.checks.items():
             setattr(s, field, box.isChecked())
+        if self.autostart.isChecked() != autostart.is_enabled():
+            autostart.set_enabled(self.autostart.isChecked())
         self.accept()

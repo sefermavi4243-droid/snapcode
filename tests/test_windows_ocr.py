@@ -36,6 +36,10 @@ def render(code: str, dark: bool, numbers: bool) -> bytes:
 @pytest.mark.parametrize("dark,numbers", [(False, False), (True, True)])
 def test_round_trip(dark, numbers):
     pytest.importorskip("winrt.windows.media.ocr")
+    from snapcode.engines.windows_ocr import available_languages
+
+    if not available_languages():
+        pytest.skip("no Windows OCR language pack installed (e.g. Windows Server)")
     from snapcode.config import Settings
     from snapcode.pipeline import recognize
 

@@ -1,0 +1,90 @@
+; Inno Setup script. Build with: ISCC.exe /DAppVersion=1.2.0 packaging\installer.iss
+; Per-user install: no admin prompt, no UAC.
+
+#ifndef AppVersion
+  #define AppVersion "0.0.0"
+#endif
+#define AppName "SnapCode"
+#define AppExe "SnapCode.exe"
+
+[Setup]
+AppId={{6F1C5B8E-2D4A-4F7B-9C3E-8A1D2B7E4C90}
+AppName={#AppName}
+AppVersion={#AppVersion}
+AppVerName={#AppName} {#AppVersion}
+AppPublisher=Sefer Mavi
+AppPublisherURL=https://github.com/sefermavi4243-droid/snapcode
+AppSupportURL=https://github.com/sefermavi4243-droid/snapcode/issues
+AppUpdatesURL=https://github.com/sefermavi4243-droid/snapcode/releases
+DefaultDirName={localappdata}\Programs\{#AppName}
+DefaultGroupName={#AppName}
+DisableProgramGroupPage=yes
+DisableDirPage=auto
+PrivilegesRequired=lowest
+OutputDir=..\build\installer
+OutputBaseFilename=SnapCode-Setup-{#AppVersion}
+SetupIconFile=snapcode.ico
+UninstallDisplayIcon={app}\{#AppExe}
+UninstallDisplayName={#AppName}
+Compression=lzma2/ultra64
+SolidCompression=yes
+WizardStyle=modern
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+MinVersion=10.0
+CloseApplications=no
+VersionInfoVersion={#AppVersion}
+
+[Languages]
+Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[CustomMessages]
+turkish.AutoStart=Windows açıldığında SnapCode'u başlat
+english.AutoStart=Start SnapCode when Windows starts
+turkish.Launch=SnapCode'u şimdi başlat
+english.Launch=Launch SnapCode now
+
+[Tasks]
+Name: "autostart"; Description: "{cm:AutoStart}"
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
+[Files]
+Source: "..\build\dist\SnapCode\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+
+[Icons]
+Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
+
+[Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "SnapCode"; ValueData: """{app}\{#AppExe}"""; Flags: uninsdeletevalue; Tasks: autostart
+
+[Run]
+Filename: "{app}\{#AppExe}"; Description: "{cm:Launch}"; Flags: nowait postinstall skipifsilent
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}"
+
+[Code]
+// A tray app has no window to close politely, so stop it before files are
+// replaced (upgrade) or removed (uninstall). Settings and history live in
+// %APPDATA%\SnapCode and are kept.
+procedure StopSnapCode();
+var
+  Code: Integer;
+begin
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#AppExe}', '', SW_HIDE, ewWaitUntilTerminated, Code);
+  Sleep(300);
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+begin
+  StopSnapCode();
+  Result := '';
+end;
+
+function InitializeUninstall(): Boolean;
+begin
+  StopSnapCode();
+  Result := True;
+end;

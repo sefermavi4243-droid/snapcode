@@ -48,18 +48,37 @@ Lightshot kadar basit: kısayola bas, seç, `Ctrl+C`.
 | Ok / `Shift`+Ok | Kaydır / boyutlandır |
 | `Esc` / sağ tık | İptal |
 
-## Kurulum
+## İndir
 
-Gereksinim: Windows 10/11, Python 3.10+
+**[SnapCode-Setup.exe - son sürüm](https://github.com/sefermavi4243-droid/snapcode/releases/latest)**
+
+Yönetici izni istemez, yaklaşık 35 MB. Kurulumda "Windows ile başlat" seçilebilir. Güncellemek için yeni sürümü kurman yeterli; ayarlar ve geçmiş korunur. Gereksinim: Windows 10/11 (64 bit).
+
+> İlk sürümler kod imzası taşımadığı için Windows SmartScreen "Tanınmayan uygulama" uyarısı gösterebilir: **Ek bilgi - Yine de çalıştır**.
+
+## Kaynaktan çalıştırma
+
+Gereksinim: Python 3.10+
 
 ```powershell
 git clone https://github.com/sefermavi4243-droid/snapcode.git
 cd snapcode
 pip install -e .
+snapcode
 ```
 
 Windows OCR için en az bir OCR dil paketi gerekir (İngilizce genelde yüklüdür). Kontrol:
-`Ayarlar → Saat ve dil → Dil` ya da PowerShell'de `Get-WindowsCapability -Online | ? Name -like 'Language.OCR*'`.
+`Get-WindowsCapability -Online | ? Name -like 'Language.OCR*'`.
+
+### Kurulum dosyasını derleme
+
+```powershell
+pip install pyinstaller
+winget install JRSoftware.InnoSetup
+powershell -ExecutionPolicy Bypass -File packagingbuild.ps1
+```
+
+Çıktı: `build\installer\SnapCode-Setup-<sürüm>.exe`. Betik, paketlenmiş `.exe` içinde OCR'ın çalıştığını kendi kendine test eder. `v*` etiketi gönderildiğinde GitHub Actions aynı derlemeyi yapıp kurulum dosyasını Releases'e yükler.
 
 ### Claude Vision motoru (isteğe bağlı)
 
@@ -70,10 +89,6 @@ setx ANTHROPIC_API_KEY "sk-ant-..."
 ya da anahtarı tepsi menüsü → **Ayarlar** içinden girin. Anahtar tanımlıysa **Otomatik** motor Claude'u kullanır.
 
 ## Kullanım
-
-```powershell
-snapcode            # sistem tepsisinde başlar (ya da: pythonw -m snapcode)
-```
 
 `Ctrl+Shift+X` (veya tepsi simgesine tıkla) - kod bloğuna tıkla ya da alanı sürükle - `Ctrl+C`.
 

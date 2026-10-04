@@ -1,0 +1,54 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: pip install -e .[dev] pyinstaller
+
+      - name: Test
+        run: python -m pytest -q
+
+      - name: Install Inno Setup
+        run: choco install innosetup -y --no-progress
+
+      # Windows Server runners may lack an OCR language pack, so the frozen
+      # self-test runs separately and does not block the build.
+      - name: Build exe and installer
+        run: powershell -ExecutionPolicy Bypass -File packaging\build.ps1 -SkipSelfTest
+
+      - name: Self-test frozen exe
+        continue-on-error: true
+        run: |
+          $p = Start-Process build\dist\SnapCode\SnapCode.exe -ArgumentList "--selftest", "$env:TEMP\st.txt" -Wait -PassThru
+          Get-Content "$env:TEMP\st.txt"
+          exit $p.ExitCode
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SnapCode-Setup
+          path: build/installer/*.exe
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/installer/*.exe
+          generate_release_notes: true

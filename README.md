@@ -27,6 +27,7 @@ Lightshot kadar basit: kısayola bas, seç, `Ctrl+C`.
 - **Tek tıkla blok seçimi** - imleci bir kod bloğunun üstüne getir, blok kesikli çerçeveyle belirir; tıkla, seçilsin. Sürüklemene gerek yok
 - **Bekleme yok** - fareyi bıraktığın anda tanıma arka planda başlar; `Ctrl+C`'ye bastığında kod çoğu zaman hazırdır. Seçim ekranı ~80 ms'de açılır
 - **Seçimin yanında küçük araç çubuğu** - kodu kopyala, düzenle, dosyaya kaydet (dile göre doğru uzantıyla), görüntüyü kopyala. Çubukta tespit edilen dil ve satır sayısı görünür
+- **IDE'ye gönder** - kodu dile uygun uzantıyla `Belgeler\SnapCode` içine kaydedip doğrudan IDE'de açar (kod panoya da kopyalanır). VS Code, Cursor, Windsurf, tüm JetBrains IDE'leri (PyCharm, IntelliJ, WebStorm, Rider, GoLand, CLion, …), Android Studio, Sublime Text ve Notepad++ otomatik bulunur. **Otomatik** modda dile göre en uygun IDE seçilir: Python için PyCharm, Java için IntelliJ, yoksa VS Code
 - **Son alanı tekrar seç** - `Space`. Video izlerken her sahnede aynı alanı yakalamak için
 - **Çift tık** - kopyala ve kapat
 - **İnce ayar** - ok tuşlarıyla seçimi 1 piksel kaydır, `Shift`+ok ile boyutlandır; köşe ve kenar tutamakları, sürükleyerek taşıma
@@ -40,6 +41,7 @@ Lightshot kadar basit: kısayola bas, seç, `Ctrl+C`.
 | Tuş | İşlev |
 |---|---|
 | `Ctrl+C` / `Enter` / çift tık | Kodu kopyala |
+| `Ctrl+O` | IDE'de aç |
 | `Ctrl+E` | Düzenleyicide aç |
 | `Ctrl+S` | Kodu dosyaya kaydet |
 | `Ctrl+Shift+C` | Görüntüyü kopyala |
@@ -99,6 +101,8 @@ snapcode ekran.png                      # kodu stdout'a yazar
 snapcode ekran.png --engine claude      # belirli motor
 snapcode --clipboard --copy             # panodaki görüntüyü çöz, kodu panoya geri koy
 snapcode ekran.png --json               # dil, motor, süre ve notlarla JSON
+snapcode ekran.png --ide                # IDE'de aç (otomatik seçim)
+snapcode ekran.png --ide pycharm        # belirli IDE'de aç
 ```
 
 ## Mimari
@@ -112,6 +116,7 @@ snapcode/
 ├── postprocess.py      geometri tabanlı kod yeniden kurma
 ├── languages.py        ağırlıklı imza + Pygments ile dil tespiti
 ├── history.py          SQLite geçmiş
+├── ide.py              kurulu IDE'leri bulma ve kodu IDE'de açma
 ├── engines/
 │   ├── windows_ocr.py  Windows.Media.Ocr + piksel sondası
 │   └── claude_vision.py

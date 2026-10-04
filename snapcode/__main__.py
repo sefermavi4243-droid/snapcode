@@ -40,6 +40,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--clipboard", action="store_true", help="panodaki görüntüyü kullan")
     parser.add_argument("--engine", choices=["auto", "windows", "claude"], help="tanıma motoru")
     parser.add_argument("--copy", action="store_true", help="sonucu panoya kopyala")
+    parser.add_argument("--ide", nargs="?", const="auto", metavar="IDE",
+                        help="sonucu IDE'de aç (vscode, cursor, pycharm, …; boşsa otomatik)")
     parser.add_argument("--json", action="store_true", help="JSON çıktı (dil, motor, süre)")
     parser.add_argument("--version", action="version", version=f"snapcode {__version__}")
     args = parser.parse_args(argv)
@@ -65,6 +67,11 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if args.copy:
         _copy(result.code)
+    if args.ide:
+        from . import ide
+
+        target, path = ide.send(result.code, result.language, args.ide)
+        print(f"# {target.name}: {path}", file=sys.stderr)
 
     sys.stdout.reconfigure(encoding="utf-8")
     if args.json:

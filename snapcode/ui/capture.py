@@ -117,6 +117,7 @@ class Overlay(QWidget):
         layout.addWidget(self.info)
         for name, glyph, tip in [
             ("copy", "code", "Kodu kopyala (Ctrl+C, Enter, çift tık)"),
+            ("ide", "ide", "IDE'de aç (Ctrl+O)"),
             ("edit", "edit", "Düzenle (Ctrl+E)"),
             ("save", "save", "Kodu dosyaya kaydet (Ctrl+S)"),
             ("image", "image", "Görüntüyü kopyala (Ctrl+Shift+C)"),
@@ -127,6 +128,8 @@ class Overlay(QWidget):
             button.setIconSize(QSize(18, 18))
             button.setToolTip(tip)
             button.clicked.connect(lambda _=False, n=name: self._trigger(n))
+            if name == "ide":
+                self.ide_button = button
             layout.addWidget(button)
         bar.hide()
         self.toolbar = bar
@@ -283,6 +286,8 @@ class Overlay(QWidget):
             self._trigger("copy")
         elif ctrl and key == Qt.Key_C:
             self._trigger("image")
+        elif ctrl and key == Qt.Key_O:
+            self._trigger("ide")
         elif ctrl and key == Qt.Key_E:
             self._trigger("edit")
         elif ctrl and key == Qt.Key_S:
@@ -401,6 +406,10 @@ class CaptureSession(QObject):
         self.last_selection = (overlay.windowHandle().screen().name(), overlay.selection)
         self.close()
         self.action.emit(name, image, rect)
+
+    def set_ide_name(self, name: str) -> None:
+        for overlay in self.overlays:
+            overlay.ide_button.setToolTip(f"{name} içinde aç (Ctrl+O)")
 
     def set_info(self, text: str) -> None:
         for overlay in self.overlays:

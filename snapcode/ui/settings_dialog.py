@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QLabel, QLineEdit, QVBoxLayout,
 )
 
-from .. import autostart, hotkey
+from .. import autostart, hotkey, ide
 from ..config import Settings
 from ..pipeline import ENGINES
 from .theme import app_icon
@@ -37,6 +37,13 @@ class SettingsDialog(QDialog):
         self.ocr_lang.addItems(ocr_languages or [settings.ocr_language])
         self.ocr_lang.setCurrentText(settings.ocr_language)
         form.addRow("OCR dili", self.ocr_lang)
+
+        self.ide = QComboBox()
+        self.ide.addItem("Otomatik (dile göre en uygun)", "auto")
+        for target in ide.detect():
+            self.ide.addItem(target.name, target.key)
+        self.ide.setCurrentIndex(max(0, self.ide.findData(settings.ide)))
+        form.addRow("IDE", self.ide)
 
         self.api_key = QLineEdit(settings.api_key)
         self.api_key.setEchoMode(QLineEdit.Password)
@@ -84,6 +91,7 @@ class SettingsDialog(QDialog):
         s.engine = self.engine.currentData()
         s.ocr_language = self.ocr_lang.currentText()
         s.api_key = self.api_key.text().strip()
+        s.ide = self.ide.currentData()
         for field, box in self.checks.items():
             setattr(s, field, box.isChecked())
         if self.autostart.isChecked() != autostart.is_enabled():

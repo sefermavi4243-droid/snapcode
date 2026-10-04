@@ -32,6 +32,12 @@ QPushButton {
     background: #ffffff; border: 1px solid #dadce0; border-radius: 3px; padding: 4px 14px;
 }
 QPushButton:hover { background: #f1f3f4; }
+QToolButton {
+    background: #ffffff; border: 1px solid #dadce0; border-radius: 3px; padding: 4px 10px;
+}
+QToolButton:hover { background: #f1f3f4; }
+QToolButton[popupMode="1"] { padding-right: 24px; }
+QToolButton::menu-button { border-left: 1px solid #dadce0; width: 18px; }
 QPushButton#primary { background: #1a73e8; border-color: #1a73e8; color: #ffffff; }
 QPushButton#primary:hover { background: #1765cc; }
 QWidget#bar { background: #f8f9fa; border-top: 1px solid #e0e0e0; }
@@ -113,6 +119,10 @@ def _draw_icon(name: str, p: QPainter, s: float) -> None:
     if name == "code":
         p.drawPolyline([pt(7, 5), pt(2.5, 10), pt(7, 15)])
         p.drawPolyline([pt(13, 5), pt(17.5, 10), pt(13, 15)])
+    elif name == "ide":
+        p.drawPolyline([pt(9, 4), pt(4, 4), pt(4, 16), pt(16, 16), pt(16, 11)])
+        p.drawLine(pt(9.5, 10.5), pt(16, 4))
+        p.drawPolyline([pt(11.5, 4), pt(16, 4), pt(16, 8.5)])
     elif name == "edit":
         path = QPainterPath(pt(4, 16))
         for x, y in [(4.5, 12.5), (13, 4), (16, 7), (7.5, 15.5), (4, 16)]:

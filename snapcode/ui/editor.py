@@ -5,10 +5,11 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
-    QComboBox, QFileDialog, QHBoxLayout, QLabel, QPlainTextEdit, QPushButton, QVBoxLayout, QWidget,
+    QComboBox, QFileDialog, QHBoxLayout, QLabel, QMenu, QPlainTextEdit, QPushButton, QToolButton,
+    QVBoxLayout, QWidget,
 )
 
-from .. import languages
+from .. import ide, languages
 from ..pipeline import Recognition
 from .theme import CodeHighlighter, Toast, app_icon
 
@@ -26,7 +27,7 @@ def save_code(parent, code: str, language: languages.Language) -> bool:
 
 
 class EditorWindow(QWidget):
-    def __init__(self, result: Recognition, on_edit=None) -> None:
+    def __init__(self, result: Recognition, on_edit=None, on_send=None) -> None:
         super().__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowTitle("SnapCode")
@@ -34,6 +35,7 @@ class EditorWindow(QWidget):
         self.setObjectName("root")
         self.snippet_id: int | None = None
         self._on_edit = on_edit
+        self._on_send = on_send
 
         self.editor = QPlainTextEdit()
         self.editor.setLineWrapMode(QPlainTextEdit.NoWrap)
@@ -59,6 +61,8 @@ class EditorWindow(QWidget):
         copy.setDefault(True)
         copy.clicked.connect(self.copy_and_close)
         row.addWidget(save)
+        if on_send:
+            row.addWidget(self._ide_button())
         row.addWidget(copy)
 
         layout = QVBoxLayout(self)
@@ -70,12 +74,28 @@ class EditorWindow(QWidget):
         lines = result.code.splitlines() or [""]
         metrics = self.editor.fontMetrics()
         width = max(metrics.horizontalAdvance(line) for line in lines) + 60
-        height = metrics.lineSpacing() * len(lines) + 90
-        self.resize(min(max(width, 460), 1100), min(max(height, 220), 760))
+        height = metrics.lineSpacing() * len(lines) + 160
+        self.resize(min(max(width, 560), 1100), min(max(height, 220), 760))
 
         QShortcut(QKeySequence("Ctrl+Return"), self, activated=self.copy_and_close)
         QShortcut(QKeySequence("Ctrl+S"), self, activated=self.save)
         QShortcut(QKeySequence("Escape"), self, activated=self.close)
+
+    def _ide_button(self) -> QToolButton:
+        """Click: default IDE. Arrow: pick any detected editor."""
+        button = QToolButton()
+        button.setText("IDE'de aç")
+        button.setPopupMode(QToolButton.MenuButtonPopup)
+        button.clicked.connect(lambda: self.send(None))
+        menu = QMenu(button)
+        for target in ide.detect():
+            menu.addAction(target.name, lambda key=target.key: self.send(key))
+        button.setMenu(menu)
+        return button
+
+    def send(self, ide_key: str | None) -> None:
+        self._on_send(self.editor.toPlainText(), self.language, ide_key)
+        self.close()
 
     @property
     def language(self) -> languages.Language:

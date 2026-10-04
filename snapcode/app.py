@@ -11,7 +11,7 @@ from PySide6.QtCore import QBuffer, QLockFile, QObject, QRect, QRunnable, QThrea
 from PySide6.QtGui import QAction, QGuiApplication, QImage
 from PySide6.QtWidgets import QApplication, QFileDialog, QMenu, QMessageBox, QSystemTrayIcon
 
-from . import __version__, pipeline
+from . import __version__, ide, pipeline
 from .config import Settings, data_dir
 from .history import History
 from .hotkey import HotkeyListener
@@ -93,6 +93,7 @@ class SnapCodeApp(QObject):
         self.tray.show()
 
         QGuiApplication.clipboard().dataChanged.connect(self._clipboard_changed)
+        QThreadPool.globalInstance().start(ide.detect)  # warm the cache off the UI thread
         self._start_hotkeys()
         Toast.show_text(f"SnapCode çalışıyor · {self.settings.hotkey.title()}")
 
@@ -164,6 +165,9 @@ class SnapCodeApp(QObject):
         def show_info(j: Job) -> None:
             if session is not None and session is self._session:
                 session.set_info(self._summary(j))
+                if j.result:
+                    target = ide.choose(j.result.language.key, self.settings.ide)
+                    session.set_ide_name(target.name)
 
         job.then(show_info)
 
@@ -225,11 +229,22 @@ class SnapCodeApp(QObject):
         if name == "copy":
             QGuiApplication.clipboard().setText(result.code)
             Toast.show_text(f"Kod kopyalandı · {self._summary(job)}")
+        elif name == "ide":
+            self.send_to_ide(result.code, result.language)
         elif name == "edit":
             self.open_editor(result, snippet_id)
         elif name == "save":
             if save_code(None, result.code, result.language):
                 Toast.show_text("Kaydedildi")
+
+    def send_to_ide(self, code: str, language, ide_key: str | None = None) -> None:
+        try:
+            target, path = ide.send(code, language, ide_key or self.settings.ide)
+        except OSError as exc:
+            Toast.show_text(f"IDE açılamadı: {exc}", 3500)
+            return
+        QGuiApplication.clipboard().setText(code)
+        Toast.show_text(f"{target.name} içinde açıldı · kod panoda da")
 
     def _remember(self, job: Job) -> int | None:
         if not self.settings.keep_history:
@@ -242,7 +257,7 @@ class SnapCodeApp(QObject):
         return job.snippet_id
 
     def open_editor(self, result: pipeline.Recognition, snippet_id: int | None) -> None:
-        editor = EditorWindow(result, self.history.update_code if snippet_id else None)
+        editor = EditorWindow(result, self.history.update_code if snippet_id else None, self.send_to_ide)
         editor.snippet_id = snippet_id
         editor.destroyed.connect(lambda _=None, e=editor: self._editors.discard(e))
         self._editors.add(editor)

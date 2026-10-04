@@ -25,6 +25,7 @@ class Settings:
     claude_model: str = "claude-opus-5-5"
     claude_effort: str = "low"
     api_key: str = ""
+    ide: str = "auto"  # auto or an ide.Ide key
     instant_copy: bool = False  # copy as soon as the mouse is released
     watch_clipboard: bool = False
     strip_line_numbers: bool = True

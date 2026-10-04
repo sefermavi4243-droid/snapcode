@@ -75,7 +75,7 @@ Windows OCR için en az bir OCR dil paketi gerekir (İngilizce genelde yüklüd�
 ```powershell
 pip install pyinstaller
 winget install JRSoftware.InnoSetup
-powershell -ExecutionPolicy Bypass -File packagingbuild.ps1
+powershell -ExecutionPolicy Bypass -File packaging\build.ps1
 ```
 
 Çıktı: `build\installer\SnapCode-Setup-<sürüm>.exe`. Betik, paketlenmiş `.exe` içinde OCR'ın çalıştığını kendi kendine test eder. `v*` etiketi gönderildiğinde GitHub Actions aynı derlemeyi yapıp kurulum dosyasını Releases'e yükler.

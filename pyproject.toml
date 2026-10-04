@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "snapcode"
+version = "1.0.0"
+description = "Screenshot any code on screen and get real, correctly indented text back."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "PySide6>=6.5",
+    "Pillow>=10",
+    "Pygments>=2.15",
+    "anthropic>=1.11",
+    "winrt-runtime>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Foundation>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Foundation.Collections>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Globalization>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Graphics.Imaging>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Media.Ocr>=3.0; sys_platform == 'win32'",
+    "winrt-Windows.Storage.Streams>=3.0; sys_platform == 'win32'",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+snapcode = "snapcode.__main__:main"
+
+[project.gui-scripts]
+snapcode-gui = "snapcode.app:run_gui"
+
+[tool.setuptools.packages.find]
+include = ["snapcode*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

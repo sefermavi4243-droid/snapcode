@@ -12,7 +12,7 @@ from .postprocess import BuildOptions, build_code, fix_artifacts
 ENGINES = {
     "auto": "Otomatik",
     "windows": "Windows OCR (çevrimdışı)",
-    "claude": "Claude Vision (en yüksek doğruluk)",
+    "claude": "Claude Vision (API anahtarı gerekir)",
 }
 
 

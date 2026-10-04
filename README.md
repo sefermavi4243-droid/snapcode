@@ -4,8 +4,6 @@
 
 YouTube videosu, toplantıda paylaşılan ekran, PDF, uzak masaüstü, bir resim içindeki kod… Kopyalanamayan her kodu `Ctrl+Shift+X` ile seç; SnapCode kodu tanır, **girintisini geri kurar**, dilini bulur ve panoya koyar.
 
-![Sonuç penceresi](docs/result-window.png)
-
 ## Neden sıradan OCR'dan farklı?
 
 Sıradan OCR boşlukları yok sayar; kod için bu ölümcüldür (Python'da girinti = anlam). SnapCode, kod ekranlarının neredeyse her zaman **eş aralıklı (monospace) yazı tipiyle** çizildiğini kullanır. Her kelimenin piksel konumunu karakter ızgarasına geri çevirir ve şunları yeniden kurar:
@@ -24,17 +22,31 @@ Sıradan OCR boşlukları yok sayar; kod için bu ölümcüldür (Python'da giri
 
 ## Özellikler
 
-- **Global kısayol** (`Ctrl+Shift+X`, değiştirilebilir) - Win32 `RegisterHotKey`, ek bağımlılık yok
-- **Çoklu monitör ve HiDPI** destekli, ekranı donduran seçim katmanı; **piksel büyüteci**, renk kodu ve seçim boyutu
-- **İki tanıma motoru**
-  - **Windows OCR** - Windows 10/11'e gömülü, tamamen çevrimdışı, ~200 ms
-  - **Claude Vision** - kodu bir geliştirici gibi okur: birebir girinti, `l`/`1`/`I` ve `O`/`0` ayrımı, editör arayüzünü yok sayma. Otomatik modda Claude başarısız olursa Windows OCR'a düşer
-- **Pano izleme** - `Win+Shift+S` ile alınan her ekran görüntüsü otomatik çözülür (tam olarak "ekran görüntüsü aldım, kodu kopyaladım" akışı)
-- **20+ dil tespiti** (Python, JS/TS, Java, C#, C/C++, Go, Rust, SQL, Bash, PowerShell, …) ve sözdizimi renklendirme
-- **Sonuç penceresi** - görüntü ve kod yan yana, düzenlenebilir; tek tıkla motor değiştirip yeniden tanıma
-- **Kopyala / Markdown bloğu olarak kopyala / doğru uzantıyla kaydet**
-- **Aranabilir geçmiş** (SQLite) - küçük resimleriyle birlikte, düzenlemeler otomatik kaydedilir
-- **Komut satırı** - betiklerde ve otomasyonda kullanmak için
+Lightshot kadar basit: kısayola bas, seç, `Ctrl+C`.
+
+- **Tek tıkla blok seçimi** - imleci bir kod bloğunun üstüne getir, blok kesikli çerçeveyle belirir; tıkla, seçilsin. Sürüklemene gerek yok
+- **Bekleme yok** - fareyi bıraktığın anda tanıma arka planda başlar; `Ctrl+C`'ye bastığında kod çoğu zaman hazırdır. Seçim ekranı ~80 ms'de açılır
+- **Seçimin yanında küçük araç çubuğu** - kodu kopyala, düzenle, dosyaya kaydet (dile göre doğru uzantıyla), görüntüyü kopyala. Çubukta tespit edilen dil ve satır sayısı görünür
+- **Son alanı tekrar seç** - `Space`. Video izlerken her sahnede aynı alanı yakalamak için
+- **Çift tık** - kopyala ve kapat
+- **İnce ayar** - ok tuşlarıyla seçimi 1 piksel kaydır, `Shift`+ok ile boyutlandır; köşe ve kenar tutamakları, sürükleyerek taşıma
+- **Anında mod** (isteğe bağlı) - seçimi bıraktığın an kopyalar
+- **Pano izleme** - `Win+Shift+S` ile alınan her ekran görüntüsü otomatik çözülür
+- **İki tanıma motoru** - Windows OCR (gömülü, çevrimdışı) ve isteğe bağlı Claude Vision (API anahtarı tanımlıysa Otomatik mod onu kullanır, hata olursa Windows OCR'a döner)
+- **20+ dil tespiti**, sözdizimi renklendirmeli düzenleyici, aranabilir geçmiş, komut satırı
+
+### Seçim ekranı kısayolları
+
+| Tuş | İşlev |
+|---|---|
+| `Ctrl+C` / `Enter` / çift tık | Kodu kopyala |
+| `Ctrl+E` | Düzenleyicide aç |
+| `Ctrl+S` | Kodu dosyaya kaydet |
+| `Ctrl+Shift+C` | Görüntüyü kopyala |
+| `Space` | Son seçilen alan |
+| `Ctrl+A` | Tüm ekran |
+| Ok / `Shift`+Ok | Kaydır / boyutlandır |
+| `Esc` / sağ tık | İptal |
 
 ## Kurulum
 
@@ -63,15 +75,7 @@ ya da anahtarı tepsi menüsü → **Ayarlar** içinden girin. Anahtar tanımlı
 snapcode            # sistem tepsisinde başlar (ya da: pythonw -m snapcode)
 ```
 
-1. `Ctrl+Shift+X` tuşlarına bas (veya tepsi simgesine tıkla)
-2. Kodun etrafını sürükleyerek seç (`Enter` = tüm ekran, `Esc` = iptal)
-3. Kod panoda. Sonuç penceresinde düzenle, `Ctrl+Enter` ile kopyala ve kapat
-
-| Kısayol (sonuç penceresi) | İşlev |
-|---|---|
-| `Ctrl+Enter` | Kopyala ve kapat |
-| `Ctrl+S` | Dosyaya kaydet |
-| `Esc` | Kapat |
+`Ctrl+Shift+X` (veya tepsi simgesine tıkla) - kod bloğuna tıkla ya da alanı sürükle - `Ctrl+C`.
 
 ### Komut satırı
 
@@ -86,7 +90,8 @@ snapcode ekran.png --json               # dil, motor, süre ve notlarla JSON
 
 ```
 snapcode/
-├── app.py              tepsi uygulaması, iş parçacığı havuzu, pano izleme
+├── app.py              tepsi uygulaması, erken tanıma, pano izleme
+├── blocks.py           ekrandaki metin bloklarını bulma (tek tıkla seçim)
 ├── hotkey.py           Win32 global kısayol dinleyicisi
 ├── pipeline.py         görüntü → kod (Qt'den bağımsız; CLI ve testler kullanır)
 ├── postprocess.py      geometri tabanlı kod yeniden kurma
@@ -95,7 +100,7 @@ snapcode/
 ├── engines/
 │   ├── windows_ocr.py  Windows.Media.Ocr + piksel sondası
 │   └── claude_vision.py
-└── ui/                 seçim katmanı, sonuç/geçmiş/ayar pencereleri, tema
+└── ui/                 seçim ekranı, düzenleyici, geçmiş, ayarlar, tema
 ```
 
 ## Testler

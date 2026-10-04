@@ -25,11 +25,10 @@ class Settings:
     claude_model: str = "claude-opus-5-5"
     claude_effort: str = "low"
     api_key: str = ""
-    auto_copy: bool = True
+    instant_copy: bool = False  # copy as soon as the mouse is released
     watch_clipboard: bool = False
     strip_line_numbers: bool = True
     strip_prompts: bool = True
-    show_result_window: bool = True
     keep_history: bool = True
 
     @classmethod

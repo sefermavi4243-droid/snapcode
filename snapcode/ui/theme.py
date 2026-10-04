@@ -1,55 +1,61 @@
-"""Dark theme, syntax highlighting and the generated app icon."""
+"""Styling, syntax highlighting, icons and the toast notification."""
 
 from __future__ import annotations
 
-from PySide6.QtCore import QRectF, Qt
+from PySide6.QtCore import QPointF, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import (
-    QColor, QFont, QIcon, QLinearGradient, QPainter, QPixmap, QSyntaxHighlighter, QTextCharFormat,
+    QColor, QGuiApplication, QIcon, QPainter, QPainterPath, QPen, QPixmap,
+    QSyntaxHighlighter, QTextCharFormat,
 )
+from PySide6.QtWidgets import QLabel
 from pygments.lexers import get_lexer_by_name
-from pygments.token import Comment, Keyword, Name, Number, Operator, String, Token
+from pygments.token import Comment, Keyword, Name, Number, String, Token
 from pygments.util import ClassNotFound
 
+ACCENT = QColor("#1a73e8")
+
 STYLESHEET = """
-* { font-family: 'Segoe UI'; font-size: 10pt; color: #e6edf3; }
-QMainWindow, QDialog, QWidget#root { background: #0f141c; }
-QPlainTextEdit, QListWidget, QLineEdit, QComboBox, QSpinBox {
-    background: #161c26; border: 1px solid #263041; border-radius: 8px; padding: 6px;
-    selection-background-color: #2b5a9e;
+QWidget { font-family: 'Segoe UI'; font-size: 9pt; color: #202124; }
+QDialog, QMainWindow, QWidget#root { background: #ffffff; }
+QPlainTextEdit {
+    background: #ffffff; border: none; padding: 8px;
+    font-family: 'Consolas'; font-size: 10.5pt; selection-background-color: #c6dafc;
 }
-QPlainTextEdit { font-family: 'Cascadia Code', 'Consolas'; font-size: 11pt; }
-QListWidget::item { padding: 8px; border-radius: 6px; }
-QListWidget::item:selected { background: #1f3a5f; }
+QListWidget { border: none; border-right: 1px solid #e0e0e0; background: #fafafa; }
+QListWidget::item { padding: 6px 8px; }
+QListWidget::item:selected { background: #e8f0fe; color: #202124; }
+QLineEdit, QComboBox {
+    border: 1px solid #dadce0; border-radius: 3px; padding: 3px 6px; background: #ffffff;
+}
+QLineEdit:focus, QComboBox:focus { border-color: #1a73e8; }
 QPushButton {
-    background: #1d2633; border: 1px solid #2b3647; border-radius: 8px; padding: 7px 14px;
+    background: #ffffff; border: 1px solid #dadce0; border-radius: 3px; padding: 4px 14px;
 }
-QPushButton:hover { background: #253144; border-color: #4f9dff; }
-QPushButton#primary { background: #2f6fd6; border-color: #2f6fd6; font-weight: 600; }
-QPushButton#primary:hover { background: #3b7ff0; }
-QPushButton:disabled { color: #5b6677; }
-QLabel#muted, QStatusBar { color: #8b98a9; }
-QLabel#preview { background: #0a0e14; border: 1px solid #263041; border-radius: 8px; }
-QCheckBox::indicator { width: 16px; height: 16px; }
-QMenu { background: #161c26; border: 1px solid #263041; padding: 4px; }
-QMenu::item { padding: 6px 22px; border-radius: 4px; }
-QMenu::item:selected { background: #1f3a5f; }
-QSplitter::handle { background: #0f141c; width: 8px; }
-QToolTip { background: #161c26; border: 1px solid #263041; color: #e6edf3; }
+QPushButton:hover { background: #f1f3f4; }
+QPushButton#primary { background: #1a73e8; border-color: #1a73e8; color: #ffffff; }
+QPushButton#primary:hover { background: #1765cc; }
+QWidget#bar { background: #f8f9fa; border-top: 1px solid #e0e0e0; }
+QLabel#muted { color: #5f6368; }
+QMenu { background: #ffffff; border: 1px solid #dadce0; padding: 4px 0; }
+QMenu::item { padding: 5px 24px 5px 20px; }
+QMenu::item:selected { background: #f1f3f4; }
+QMenu::separator { height: 1px; background: #e0e0e0; margin: 4px 0; }
+QToolTip { background: #3c4043; color: #ffffff; border: none; padding: 4px 6px; }
 """
 
+# GitHub light palette.
 _PALETTE = {
-    Keyword: ("#c678dd", False),
-    Name.Function: ("#61afef", False),
-    Name.Class: ("#e5c07b", False),
-    Name.Builtin: ("#56b6c2", False),
-    Name.Decorator: ("#e5c07b", False),
-    Name.Tag: ("#e06c75", False),
-    Name.Attribute: ("#d19a66", False),
-    Name.Exception: ("#e5c07b", False),
-    String: ("#98c379", False),
-    Number: ("#d19a66", False),
-    Operator: ("#56b6c2", False),
-    Comment: ("#7f848e", True),
+    Keyword: ("#cf222e", False),
+    Name.Function: ("#8250df", False),
+    Name.Class: ("#953800", False),
+    Name.Builtin: ("#0550ae", False),
+    Name.Decorator: ("#8250df", False),
+    Name.Tag: ("#116329", False),
+    Name.Attribute: ("#0550ae", False),
+    Name.Exception: ("#953800", False),
+    String: ("#0a3069", False),
+    Number: ("#0550ae", False),
+    Comment: ("#6e7781", True),
 }
 
 
@@ -93,23 +99,110 @@ class CodeHighlighter(QSyntaxHighlighter):
             pos += len(value)
 
 
-def app_icon() -> QIcon:
-    icon = QIcon()
-    for size in (16, 24, 32, 48, 64, 128, 256):
+# --------------------------------------------------------------------------
+# Icons: simple 1.6px line drawings, crisp at 20px.
+# --------------------------------------------------------------------------
+
+def _draw_icon(name: str, p: QPainter, s: float) -> None:
+    def pt(x, y):
+        return QPointF(x * s / 20, y * s / 20)
+
+    def rect(x, y, w, h, r=1.5):
+        p.drawRoundedRect(QRectF(pt(x, y), pt(x + w, y + h)), r * s / 20, r * s / 20)
+
+    if name == "code":
+        p.drawPolyline([pt(7, 5), pt(2.5, 10), pt(7, 15)])
+        p.drawPolyline([pt(13, 5), pt(17.5, 10), pt(13, 15)])
+    elif name == "edit":
+        path = QPainterPath(pt(4, 16))
+        for x, y in [(4.5, 12.5), (13, 4), (16, 7), (7.5, 15.5), (4, 16)]:
+            path.lineTo(pt(x, y))
+        p.drawPath(path)
+        p.drawLine(pt(11.5, 5.5), pt(14.5, 8.5))
+    elif name == "image":
+        rect(3, 4, 14, 12)
+        p.drawPolyline([pt(3.5, 14), pt(8, 9.5), pt(11, 12.5), pt(13, 10.5), pt(16.5, 14)])
+        p.drawEllipse(QRectF(pt(12, 6), pt(14, 8)))
+    elif name == "save":
+        p.drawLine(pt(10, 3), pt(10, 12.5))
+        p.drawPolyline([pt(6, 9), pt(10, 13), pt(14, 9)])
+        p.drawPolyline([pt(3.5, 13), pt(3.5, 16.5), pt(16.5, 16.5), pt(16.5, 13)])
+    elif name == "close":
+        p.drawLine(pt(5, 5), pt(15, 15))
+        p.drawLine(pt(15, 5), pt(5, 15))
+
+
+def icon(name: str, color: str = "#3c4043") -> QIcon:
+    result = QIcon()
+    for size in (20, 40):
         pix = QPixmap(size, size)
         pix.fill(Qt.transparent)
         p = QPainter(pix)
         p.setRenderHint(QPainter.Antialiasing)
-        grad = QLinearGradient(0, 0, size, size)
-        grad.setColorAt(0, QColor("#4f9dff"))
-        grad.setColorAt(1, QColor("#8a5cff"))
-        p.setBrush(grad)
-        p.setPen(Qt.NoPen)
-        p.drawRoundedRect(QRectF(0, 0, size, size), size * 0.22, size * 0.22)
-        p.setPen(QColor("white"))
-        font = QFont("Consolas", max(5, int(size * 0.36)), QFont.Bold)
-        p.setFont(font)
-        p.drawText(QRectF(0, 0, size, size * 0.96), Qt.AlignCenter, "</>")
+        pen = QPen(QColor(color), 1.6 * size / 20)
+        pen.setCapStyle(Qt.RoundCap)
+        pen.setJoinStyle(Qt.RoundJoin)
+        p.setPen(pen)
+        _draw_icon(name, p, size)
         p.end()
-        icon.addPixmap(pix)
-    return icon
+        pix.setDevicePixelRatio(size / 20)
+        result.addPixmap(pix)
+    return result
+
+
+def app_icon() -> QIcon:
+    result = QIcon()
+    for size in (16, 24, 32, 48, 64, 256):
+        pix = QPixmap(size, size)
+        pix.fill(Qt.transparent)
+        p = QPainter(pix)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.setPen(Qt.NoPen)
+        p.setBrush(ACCENT)
+        p.drawRoundedRect(QRectF(0, 0, size, size), size * 0.2, size * 0.2)
+        pen = QPen(QColor("white"), max(1.5, size * 0.09))
+        pen.setCapStyle(Qt.RoundCap)
+        pen.setJoinStyle(Qt.RoundJoin)
+        p.setPen(pen)
+        f = size / 20
+        p.drawPolyline([QPointF(7.5 * f, 6 * f), QPointF(4 * f, 10 * f), QPointF(7.5 * f, 14 * f)])
+        p.drawPolyline([QPointF(12.5 * f, 6 * f), QPointF(16 * f, 10 * f), QPointF(12.5 * f, 14 * f)])
+        p.end()
+        result.addPixmap(pix)
+    return result
+
+
+# --------------------------------------------------------------------------
+# Toast
+# --------------------------------------------------------------------------
+
+class Toast(QLabel):
+    """Small, click-through confirmation in the bottom-right corner."""
+
+    _current: "Toast | None" = None
+
+    def __init__(self, text: str) -> None:
+        super().__init__(text)
+        self.setWindowFlags(
+            Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool | Qt.WindowTransparentForInput
+        )
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setStyleSheet(
+            "background: #202124; color: #ffffff; border-radius: 4px; padding: 9px 14px;"
+            "font-family: 'Segoe UI'; font-size: 9pt;"
+        )
+
+    @classmethod
+    def show_text(cls, text: str, ms: int = 1800) -> None:
+        if cls._current is not None:
+            cls._current.close()
+        toast = cls(text)
+        toast.adjustSize()
+        area: QRect = QGuiApplication.primaryScreen().availableGeometry()
+        toast.move(area.right() - toast.width() - 16, area.bottom() - toast.height() - 16)
+        toast.show()
+        QTimer.singleShot(ms, toast.close)
+        cls._current = toast
+        toast.destroyed.connect(lambda: setattr(cls, "_current", None) if cls._current is toast else None)
+

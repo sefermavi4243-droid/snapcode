@@ -57,9 +57,9 @@ def available_languages() -> list[str]:
     return [lang.language_tag for lang in OcrEngine.available_recognizer_languages]
 
 
-def _normalize(png: bytes) -> Image.Image:
-    """Load as RGBA with dark text on a light background."""
-    image = Image.open(io.BytesIO(png)).convert("RGBA")
+def _normalize(image: Image.Image) -> Image.Image:
+    """Return RGBA with dark text on a light background."""
+    image = image.convert("RGBA")
     gray = image.convert("L")
     if ImageStat.Stat(gray).mean[0] < 110:
         # Dark themes OCR noticeably worse; invert.
@@ -68,10 +68,10 @@ def _normalize(png: bytes) -> Image.Image:
     return image
 
 
-def _prepare(image: Image.Image) -> tuple[Image.Image, float, int]:
+def _prepare(image: Image.Image, upscale: bool) -> tuple[Image.Image, float, int]:
     scale = 1.0
     longest = max(image.size)
-    if longest < _MIN_UPSCALE_EDGE:
+    if upscale and longest < _MIN_UPSCALE_EDGE:
         scale = min(3.0, _MIN_UPSCALE_EDGE / longest)
         image = image.resize(
             (round(image.width * scale), round(image.height * scale)), Image.Resampling.LANCZOS
@@ -83,7 +83,9 @@ def _prepare(image: Image.Image) -> tuple[Image.Image, float, int]:
     return padded, scale, pad
 
 
-async def _recognize(png: bytes, language_tag: str) -> tuple[list[OcrLine], PixelProbe]:
+async def _recognize(
+    source: Image.Image, language_tag: str, upscale: bool
+) -> tuple[list[OcrLine], PixelProbe]:
     Language, BitmapPixelFormat, SoftwareBitmap, OcrEngine, DataWriter = _load_winrt()
 
     engine = None
@@ -96,8 +98,8 @@ async def _recognize(png: bytes, language_tag: str) -> tuple[list[OcrLine], Pixe
     if engine is None:
         raise WindowsOcrUnavailable("Bu sistemde Windows OCR dil paketi yüklü değil.")
 
-    original = _normalize(png)
-    image, scale, pad = _prepare(original)
+    original = _normalize(source)
+    image, scale, pad = _prepare(original, upscale)
     factor = 1.0
     limit = OcrEngine.max_image_dimension
     if max(image.size) > limit:
@@ -134,4 +136,9 @@ async def _recognize(png: bytes, language_tag: str) -> tuple[list[OcrLine], Pixe
 
 def recognize(png: bytes, language_tag: str = "en-US") -> tuple[list[OcrLine], PixelProbe]:
     """Return OCR rows in source-image pixels plus a probe into those pixels."""
-    return asyncio.run(_recognize(png, language_tag))
+    return asyncio.run(_recognize(Image.open(io.BytesIO(png)), language_tag, upscale=True))
+
+
+def scan(image: Image.Image, language_tag: str = "en-US") -> list[OcrLine]:
+    """Fast, no-upscale pass over a whole screen; used to locate text blocks."""
+    return asyncio.run(_recognize(image, language_tag, upscale=False))[0]

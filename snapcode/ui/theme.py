@@ -25,53 +25,65 @@ MIST = QColor("#B8B0C8")
 CORAL = QColor("#F09A7E")
 
 STYLESHEET = """
-QWidget { font-family: 'Segoe UI'; font-size: 9pt; color: #202124; }
-QDialog, QMainWindow, QWidget#root { background: #ffffff; }
+QWidget { font-family: 'Segoe UI'; font-size: 9pt; color: #2E2A47; }
+QDialog, QMainWindow, QWidget#root { background: #FBF7F1; }
 QPlainTextEdit {
-    background: #ffffff; border: none; padding: 8px;
-    font-family: 'Consolas'; font-size: 10.5pt; selection-background-color: #c6dafc;
+    background: #FFFCF8; border: none; padding: 12px;
+    font-family: 'Cascadia Mono', 'Consolas'; font-size: 10.5pt;
+    selection-background-color: #E2D9F3; selection-color: #2E2A47;
 }
-QListWidget { border: none; border-right: 1px solid #e0e0e0; background: #fafafa; }
-QListWidget::item { padding: 6px 8px; }
-QListWidget::item:selected { background: #e8f0fe; color: #202124; }
+QListWidget { border: none; border-right: 1px solid #EADFCF; background: #F6EFE4; outline: none; }
+QListWidget::item { padding: 8px 10px; border-radius: 6px; margin: 2px 6px; }
+QListWidget::item:hover { background: #F0E6D8; }
+QListWidget::item:selected { background: #E9E1F7; color: #2E2A47; }
 QLineEdit, QComboBox {
-    border: 1px solid #dadce0; border-radius: 3px; padding: 3px 6px; background: #ffffff;
+    border: 1px solid #E3D6C4; border-radius: 6px; padding: 4px 8px; background: #FFFCF8;
 }
-QLineEdit:focus, QComboBox:focus { border-color: #1a73e8; }
+QLineEdit:focus, QComboBox:focus { border-color: #9B8AD9; }
+QComboBox::drop-down { border: none; width: 22px; }
+QComboBox::down-arrow { image: url(@CHEVRON@); width: 10px; height: 10px; }
+QComboBox QAbstractItemView {
+    background: #FFFCF8; border: 1px solid #E3D6C4; selection-background-color: #EFE9F8;
+    selection-color: #2E2A47; outline: none;
+}
 QPushButton {
-    background: #ffffff; border: 1px solid #dadce0; border-radius: 3px; padding: 4px 14px;
+    background: #FFFCF8; border: 1px solid #E3D6C4; border-radius: 6px; padding: 5px 14px;
 }
-QPushButton:hover { background: #f1f3f4; }
+QPushButton:hover { background: #F3EADF; }
+QPushButton:pressed { background: #EADFCF; }
 QToolButton {
-    background: #ffffff; border: 1px solid #dadce0; border-radius: 3px; padding: 4px 10px;
+    background: #FFFCF8; border: 1px solid #E3D6C4; border-radius: 6px; padding: 5px 12px;
 }
-QToolButton:hover { background: #f1f3f4; }
-QToolButton[popupMode="1"] { padding-right: 24px; }
-QToolButton::menu-button { border-left: 1px solid #dadce0; width: 18px; }
-QPushButton#primary { background: #1a73e8; border-color: #1a73e8; color: #ffffff; }
-QPushButton#primary:hover { background: #1765cc; }
-QWidget#bar { background: #f8f9fa; border-top: 1px solid #e0e0e0; }
-QLabel#muted { color: #5f6368; }
-QMenu { background: #ffffff; border: 1px solid #dadce0; padding: 4px 0; }
-QMenu::item { padding: 5px 24px 5px 20px; }
-QMenu::item:selected { background: #f1f3f4; }
-QMenu::separator { height: 1px; background: #e0e0e0; margin: 4px 0; }
-QToolTip { background: #3c4043; color: #ffffff; border: none; padding: 4px 6px; }
+QToolButton:hover { background: #F3EADF; }
+QToolButton[popupMode="1"] { padding-right: 26px; }
+QToolButton::menu-button { border: none; border-left: 1px solid #E3D6C4; width: 22px; }
+QToolButton::menu-arrow { image: url(@CHEVRON@); width: 10px; height: 10px; }
+QPushButton#primary { background: #9B8AD9; border-color: #9B8AD9; color: #FFFFFF; font-weight: 600; }
+QPushButton#primary:hover { background: #8C7BCB; border-color: #8C7BCB; }
+QPushButton#primary:pressed { background: #7E6DBE; }
+QWidget#bar { background: #F6EFE4; border-top: 1px solid #EADFCF; }
+QLabel#muted { color: #8A829C; }
+QMenu { background: #FFFCF8; border: 1px solid #E3D6C4; border-radius: 8px; padding: 6px; }
+QMenu::item { padding: 6px 24px 6px 16px; border-radius: 5px; }
+QMenu::item:selected { background: #EFE9F8; color: #2E2A47; }
+QMenu::separator { height: 1px; background: #EADFCF; margin: 5px 8px; }
+QToolTip { background: #2E2A47; color: #FBF3E8; border: none; padding: 5px 8px; }
 """
 
-# GitHub light palette.
+# Lo-fi light palette: berry keywords, lavender functions, sage strings,
+# peach numbers and dusty comments, all readable on cream.
 _PALETTE = {
-    Keyword: ("#cf222e", False),
-    Name.Function: ("#8250df", False),
-    Name.Class: ("#953800", False),
-    Name.Builtin: ("#0550ae", False),
-    Name.Decorator: ("#8250df", False),
-    Name.Tag: ("#116329", False),
-    Name.Attribute: ("#0550ae", False),
-    Name.Exception: ("#953800", False),
-    String: ("#0a3069", False),
-    Number: ("#0550ae", False),
-    Comment: ("#6e7781", True),
+    Keyword: ("#B5507E", False),
+    Name.Function: ("#6E5BC4", False),
+    Name.Class: ("#A0603A", False),
+    Name.Builtin: ("#3F7FA8", False),
+    Name.Decorator: ("#6E5BC4", False),
+    Name.Tag: ("#4E8A6F", False),
+    Name.Attribute: ("#3F7FA8", False),
+    Name.Exception: ("#A0603A", False),
+    String: ("#4E8A6F", False),
+    Number: ("#C2703D", False),
+    Comment: ("#A79FB8", True),
 }
 
 
@@ -115,6 +127,29 @@ class CodeHighlighter(QSyntaxHighlighter):
             pos += len(value)
 
 
+def stylesheet() -> str:
+    """The app stylesheet, with its drop-down chevron rendered to a file.
+
+    Qt style sheets can only take images from files, so the chevron is drawn
+    once into the data folder and referenced from there.
+    """
+    from ..config import data_dir
+
+    path = data_dir() / "chevron.png"
+    pix = QPixmap(40, 40)
+    pix.fill(Qt.transparent)
+    p = QPainter(pix)
+    p.setRenderHint(QPainter.Antialiasing)
+    pen = QPen(DUSK, 4.5)
+    pen.setCapStyle(Qt.RoundCap)
+    pen.setJoinStyle(Qt.RoundJoin)
+    p.setPen(pen)
+    p.drawPolyline([QPointF(10, 15), QPointF(20, 25), QPointF(30, 15)])
+    p.end()
+    pix.save(str(path))
+    return STYLESHEET.replace("@CHEVRON@", path.as_posix())
+
+
 def load_brand_fonts() -> None:
     """Register the bundled JetBrains Mono, the brand's monospace face."""
     from ..glyphs import BUNDLED_DIR
@@ -137,15 +172,20 @@ def _draw_icon(name: str, p: QPainter, s: float) -> None:
         p.drawPolyline([pt(7, 5), pt(2.5, 10), pt(7, 15)])
         p.drawPolyline([pt(13, 5), pt(17.5, 10), pt(13, 15)])
     elif name == "ide":
-        p.drawPolyline([pt(9, 4), pt(4, 4), pt(4, 16), pt(16, 16), pt(16, 11)])
-        p.drawLine(pt(9.5, 10.5), pt(16, 4))
-        p.drawPolyline([pt(11.5, 4), pt(16, 4), pt(16, 8.5)])
+        # An editor window with a title bar and code inside.
+        rect(2.5, 3.5, 15, 13, 2.5)
+        p.drawLine(pt(2.5, 7), pt(17.5, 7))
+        p.drawPolyline([pt(7.5, 9.5), pt(5.5, 11.75), pt(7.5, 14)])
+        p.drawPolyline([pt(12.5, 9.5), pt(14.5, 11.75), pt(12.5, 14)])
+        p.drawLine(pt(10.8, 9.5), pt(9.2, 14))
     elif name == "edit":
-        path = QPainterPath(pt(4, 16))
-        for x, y in [(4.5, 12.5), (13, 4), (16, 7), (7.5, 15.5), (4, 16)]:
+        # A pencil writing on a line.
+        path = QPainterPath(pt(3.5, 14.5))
+        for x, y in [(4.2, 11.6), (11.8, 4), (14.6, 6.8), (7, 14.4), (3.5, 14.5)]:
             path.lineTo(pt(x, y))
         p.drawPath(path)
-        p.drawLine(pt(11.5, 5.5), pt(14.5, 8.5))
+        p.drawLine(pt(10.3, 5.5), pt(13.1, 8.3))
+        p.drawLine(pt(10.5, 16.5), pt(16.5, 16.5))
     elif name == "image":
         rect(3, 4, 14, 12)
         p.drawPolyline([pt(3.5, 14), pt(8, 9.5), pt(11, 12.5), pt(13, 10.5), pt(16.5, 14)])
@@ -234,7 +274,7 @@ class Toast(QLabel):
         self.setAttribute(Qt.WA_ShowWithoutActivating)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setStyleSheet(
-            "background: #202124; color: #ffffff; border-radius: 4px; padding: 9px 14px;"
+            "background: #2E2A47; color: #FBF3E8; border-radius: 8px; padding: 10px 16px;"
             "font-family: 'Segoe UI'; font-size: 9pt;"
         )
 

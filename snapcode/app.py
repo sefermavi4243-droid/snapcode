@@ -20,7 +20,7 @@ from .ui.capture import CaptureSession
 from .ui.editor import EditorWindow, save_code
 from .ui.history_window import HistoryWindow
 from .ui.settings_dialog import SettingsDialog
-from .ui.theme import STYLESHEET, Toast, app_icon, load_brand_fonts
+from .ui.theme import Toast, app_icon, load_brand_fonts, stylesheet
 
 
 def image_to_png(image: QImage) -> bytes:
@@ -233,7 +233,7 @@ class CodeLiftApp(QObject):
         elif name == "ide":
             self.send_to_ide(result.code, result.language)
         elif name == "edit":
-            self.open_editor(result, snippet_id)
+            self.open_editor(result, snippet_id, job.png)
         elif name == "save":
             if save_code(None, result.code, result.language):
                 Toast.show_text(t("Kaydedildi"))
@@ -257,8 +257,8 @@ class CodeLiftApp(QObject):
                 self._history_window.refresh()
         return job.snippet_id
 
-    def open_editor(self, result: pipeline.Recognition, snippet_id: int | None) -> None:
-        editor = EditorWindow(result, self.history.update_code if snippet_id else None, self.send_to_ide)
+    def open_editor(self, result: pipeline.Recognition, snippet_id: int | None, image: bytes | None = None) -> None:
+        editor = EditorWindow(result, self.history.update_code if snippet_id else None, self.send_to_ide, image)
         editor.snippet_id = snippet_id
         editor.destroyed.connect(lambda _=None, e=editor: self._editors.discard(e))
         self._editors.add(editor)
@@ -346,7 +346,7 @@ def run_gui() -> int:
     app.setApplicationName(APP_NAME)
     app.setQuitOnLastWindowClosed(False)
     app.setStyle("Fusion")
-    app.setStyleSheet(STYLESHEET)
+    app.setStyleSheet(stylesheet())
     app.setWindowIcon(app_icon())
     load_brand_fonts()
 

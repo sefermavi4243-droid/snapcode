@@ -45,6 +45,8 @@ EN = {
     "Kodu dosyaya kaydet (Ctrl+S)": "Save code to file (Ctrl+S)",
     "Görüntüyü kopyala (Ctrl+Shift+C)": "Copy image (Ctrl+Shift+C)",
     "Kapat (Esc)": "Close (Esc)",
+    "IDE": "IDE",
+    "Düzenle": "Edit",
     "okunuyor…": "reading…",
     # editor
     "Kodu kaydet": "Save code",
@@ -53,6 +55,9 @@ EN = {
     "Kaydet": "Save",
     "Kopyala": "Copy",
     "IDE'de aç": "Open in IDE",
+    "Görüntü": "Image",
+    "Yakalanan görüntüyü kodun üstünde göster (Ctrl+G)": "Show the captured image above the code (Ctrl+G)",
+    "Ctrl+Enter kopyala · Ctrl+S kaydet · Esc kapat": "Ctrl+Enter copy · Ctrl+S save · Esc close",
     # history
     "Kodda ara…  (ör. useEffect, SELECT, python)": "Search code…  (e.g. useEffect, SELECT, python)",
     "Sil": "Delete",

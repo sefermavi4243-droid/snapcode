@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 from PySide6.QtCore import QObject, QPoint, QRect, QRectF, QRunnable, QSize, Qt, QThreadPool, QTimer, Signal
-from PySide6.QtGui import QColor, QCursor, QFont, QGuiApplication, QImage, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QGuiApplication, QImage, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QHBoxLayout, QLabel, QToolButton, QWidget
 
 from .. import blocks
 from ..i18n import t
-from .theme import CORAL, CREAM, DUSK, LAVENDER, MIST, SAGE, icon
+from .theme import ACCENT, CORAL, CREAM, DUSK, MIST, SAGE, icon
 
 HANDLE = 6
 MIN_SIZE = 6
-# A dusk-purple haze instead of plain black dims everything but the selection.
-_SHADE = QColor(46, 42, 71, 125)
+# The screen itself stays neutral; only the toolbar wears the lo-fi colours.
+_SHADE = QColor(0, 0, 0, 110)
 # Status cell colours: reading, recognized, nothing found.
 STATUS = {"busy": MIST.name(), "ok": SAGE.name(), "error": CORAL.name()}
 
@@ -25,11 +25,26 @@ QToolButton:pressed { background: #E8D9C4; }
 QToolButton#primary { background: #9B8AD9; }
 QToolButton#primary:hover { background: #A999E0; }
 QToolButton#primary:pressed { background: #8C7BCB; }
+QToolButton#pill {
+    background: #EFE9F8; border: 1px solid #E2D9F3; border-radius: 5px; padding: 2px 7px 2px 5px;
+    color: #2E2A47; font-family: 'Segoe UI'; font-weight: 600; font-size: 8pt;
+}
+QToolButton#pill:hover { background: #E5DCF5; border-color: #D6CAEE; }
+QToolButton#pill:pressed { background: #DCD0F1; }
 QLabel#status { color: #5A5373; font-family: 'Segoe UI'; font-size: 8pt; padding: 0 6px 0 2px; }
 QLabel#cell { min-width: 6px; max-width: 6px; min-height: 12px; max-height: 12px; margin-left: 5px;
               border-radius: 2px; }
 QFrame#sep { background: #E6D9C7; min-width: 1px; max-width: 1px; margin: 6px 2px; }
 """
+
+
+def fit_pill(button: QToolButton) -> None:
+    """Size a text pill to its bold label; Qt measures it in the regular weight."""
+    font = QFont("Segoe UI")
+    font.setPointSizeF(8)  # matches QToolButton#pill in TOOLBAR_STYLE
+    font.setBold(True)
+    text = QFontMetrics(font).horizontalAdvance(button.text())
+    button.setFixedWidth(text + button.iconSize().width() + 20)
 
 
 def qimage_to_pil(image: QImage):
@@ -126,8 +141,8 @@ class Overlay(QWidget):
         shadow.setColor(QColor(0, 0, 0, 60))
         bar.setGraphicsEffect(shadow)
         layout = QHBoxLayout(bar)
-        layout.setContentsMargins(3, 3, 3, 3)
-        layout.setSpacing(1)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(3)
         # Status: a small cursor "cell" in the state colour plus the result.
         self.cell = QLabel(objectName="cell")
         self.info = QLabel("", objectName="status")
@@ -151,6 +166,14 @@ class Overlay(QWidget):
             button.setToolTip(tip)
             if name == "copy":
                 button.setObjectName("primary")
+            elif name in ("ide", "edit"):
+                # The two ways to keep working on the code get words, not
+                # just icons: "PyCharm", "Düzenle".
+                button.setObjectName("pill")
+                button.setIconSize(QSize(14, 14))
+                button.setText(t("IDE") if name == "ide" else t("Düzenle"))
+                button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+                fit_pill(button)
             button.clicked.connect(lambda _=False, n=name: self._trigger(n))
             if name == "ide":
                 self.ide_button = button
@@ -363,16 +386,16 @@ class Overlay(QWidget):
         p.fillPath(shade, _SHADE)
 
         if not self._hover.isNull():
-            pen = QPen(LAVENDER, 1, Qt.DashLine)
+            pen = QPen(ACCENT, 1, Qt.DashLine)
             p.setPen(pen)
             p.drawRect(self._hover.adjusted(0, 0, -1, -1))
 
         if not self._sel.isNull():
-            p.setPen(QPen(LAVENDER, 1))
+            p.setPen(QPen(ACCENT, 1))
             p.setBrush(Qt.NoBrush)
             p.drawRect(self._sel.adjusted(0, 0, -1, -1))
-            p.setBrush(LAVENDER)
-            p.setPen(QPen(CREAM, 1))
+            p.setBrush(ACCENT)
+            p.setPen(QPen(Qt.white, 1))
             for rect in self._handles().values():
                 p.drawRect(rect)
             phys = self._physical(self._sel)
@@ -385,9 +408,9 @@ class Overlay(QWidget):
         y = self._sel.top() - 20 if self._sel.top() >= 20 else self._sel.top() + 2
         box = QRect(self._sel.left(), y, w, 18)
         p.setPen(Qt.NoPen)
-        p.setBrush(DUSK)
+        p.setBrush(QColor(0, 0, 0, 170))
         p.drawRect(box)
-        p.setPen(CREAM)
+        p.setPen(Qt.white)
         p.drawText(box, Qt.AlignCenter, text)
 
 
@@ -438,6 +461,9 @@ class CaptureSession(QObject):
     def set_ide_name(self, name: str) -> None:
         for overlay in self.overlays:
             overlay.ide_button.setToolTip(t("{ide} içinde aç (Ctrl+O)", ide=name))
+            overlay.ide_button.setText(name)
+            fit_pill(overlay.ide_button)
+            overlay._place_toolbar()
 
     def set_info(self, text: str, ok: bool = True) -> None:
         for overlay in self.overlays:

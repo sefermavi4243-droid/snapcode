@@ -157,3 +157,29 @@ def unify_identifiers(text: str) -> tuple[str, int]:
         return text, 0
     pattern = re.compile(r"(?<![A-Za-z0-9_])(" + "|".join(map(re.escape, fixes)) + r")(?![A-Za-z0-9_])")
     return pattern.sub(lambda m: fixes[m.group(1)], text), len(fixes)
+
+
+# --------------------------------------------------------------------------
+# Tokens
+# --------------------------------------------------------------------------
+
+_TOKEN_FIXES = (
+    # "->" read as "-Y" (Python return annotations, C++/PHP arrows).
+    (re.compile(r"(?<=[\w)\]] )-Y(?= )"), "->"),
+    # A name cannot start with a digit: "1ine" is "line", "1en" is "len",
+    # also after an attribute dot ("metrics.1ineSpacing"). Number suffixes
+    # and units ("1px", "1rem", "1st") are real.
+    (re.compile(
+        r"(?:(?<![\w.])|(?<=[A-Za-z_)\]]\.))1"
+        r"(?!(?:px|em|rem|pt|vh|vw|ms|deg|fr|ch|ex|st|nd|rd|th|kb|mb|gb)\b)(?=[a-z]{2}[A-Za-z_]*\b)"
+    ), "l"),
+)
+
+
+def fix_tokens(text: str) -> tuple[str, int]:
+    """Fix token shapes that cannot occur in code. Returns (text, changes)."""
+    changes = 0
+    for pattern, replacement in _TOKEN_FIXES:
+        text, n = pattern.subn(replacement, text)
+        changes += n
+    return text, changes

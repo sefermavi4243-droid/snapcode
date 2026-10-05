@@ -327,6 +327,9 @@ def build_code(
         text, n = codefix.balance_brackets(text)
         if n:
             options.report.append(f"{n} brackets paired up")
+        text, n = codefix.fix_tokens(text)
+        if n:
+            options.report.append(f"{n} impossible tokens fixed")
         text, n = codefix.unify_identifiers(text)
         if n:
             options.report.append(f"{n} misspelled names unified")

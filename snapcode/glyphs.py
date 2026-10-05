@@ -55,6 +55,8 @@ FACTOR = 2.0
 # is not in a monospace font we can model (UI text, prose) and nothing is
 # touched. Monospace code scores below 0.26, proportional fonts above 0.5.
 MAX_FIT_COST = 0.38
+# Distance under which a cell counts as the same glyph as an in-image exemplar.
+EXEMPLAR_MATCH = 0.08
 # Characters OCR confuses with each other.
 LOOKALIKES = ("l1I|i!", "0OoeQD@", "(C[{t", ")]}J", ";:", "'`", "vV", "sS", "zZ", "xX", "cC", "wW", "-~")
 # Glyphs that reach below the baseline, which makes their box a poor baseline.
@@ -301,42 +303,58 @@ def _kind(ch: str) -> str:
     return "other"
 
 
+def _decisive(mine: float, theirs: float, strict: int) -> bool:
+    """True when ``theirs`` beats ``mine`` clearly enough to act on."""
+    return mine - theirs >= strict * MARGIN and mine >= strict * FACTOR * theirs
+
+
 def _check_lookalikes(grid: _Grid, word: OcrWord, top: float) -> int:
-    """Swap look-alike characters the templates clearly disagree with."""
+    """Swap look-alike characters the pixels clearly disagree with.
+
+    Two judges: glyph templates, and exemplars (how each character looks
+    elsewhere in this same image). Templates decide first; when they are not
+    decisive the exemplars get a vote, since they share the screenshot's
+    exact font, size and rendering.
+    """
     if not _fits_grid(word, grid.cw):
         return 0
     c0 = grid.column(word)
     chars = list(word.text)
+    stride = grid.font.stride
     fixed = 0
     for k, ch in enumerate(chars):
         group = next((g for g in LOOKALIKES if ch in g), None)
         if group is None:
             continue
-        scores = grid.scores(c0 + k, top, group)
-        other = min(scores, key=scores.get)
-        if other == ch:
-            continue
         # Lowercase sits next to lowercase, digits next to digits; crossing
         # over (``value`` -> ``va1ue``, ``walk`` -> ``waIk``) needs much
         # stronger evidence.
         near = {_kind(n) for n in chars[max(0, k - 1):k] + chars[k + 1:k + 2]} - {"other"}
-        strict = 1 if not near or _kind(other) in near else 3
-        if scores[ch] - scores[other] < strict * MARGIN or scores[ch] < strict * FACTOR * scores[other]:
+
+        def strictness(other: str) -> int:
+            return 1 if not near or _kind(other) in near else 3
+
+        scores = grid.scores(c0 + k, top, group)
+        cell = grid.cell(c0 + k, top)
+        seen = {g: _distance(cell, grid.exemplars[g], stride) for g in group if g in grid.exemplars}
+
+        other = min(scores, key=scores.get)
+        if other != ch and _decisive(scores[ch], scores[other], strictness(other)):
+            # The exemplar of the OCR'd character can still overrule a
+            # template rendered by a different rasterizer.
+            if ch not in seen or seen[ch] > seen.get(other, scores[other]):
+                chars[k] = other
+                fixed += 1
             continue
-        exemplar = grid.exemplars.get(ch)
-        if exemplar is not None:
-            # Trust the way this character looks elsewhere in the image over
-            # a template rendered by a different rasterizer.
-            cell = grid.cell(c0 + k, top)
-            stride = grid.font.stride
-            mine = _distance(cell, exemplar, stride)
-            theirs = (
-                _distance(cell, grid.exemplars[other], stride) if other in grid.exemplars else scores[other]
-            )
-            if mine <= theirs:
-                continue
-        chars[k] = other
-        fixed += 1
+        if ch in seen and len(seen) > 1:
+            other = min(seen, key=seen.get)
+            # A near-perfect match with a character seen elsewhere in the
+            # image outweighs what the neighbours suggest (``l1`` is a name).
+            strict = 1 if seen[other] <= EXEMPLAR_MATCH else strictness(other)
+            if (other != ch and _decisive(seen[ch], seen[other], strict)
+                    and scores[other] <= scores[ch] + MARGIN):
+                chars[k] = other
+                fixed += 1
     word.text = "".join(chars)
     return fixed
 

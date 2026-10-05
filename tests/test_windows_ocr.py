@@ -47,3 +47,19 @@ def test_round_trip(dark, numbers):
     assert result.engine == "windows"
     assert result.language.key == "python"
     assert result.code == CODE + "\n"
+
+
+def test_normalize_keeps_coloured_and_dim_text():
+    """Syntax colours, dim comments and diff line backgrounds all become dark ink on white."""
+    from snapcode.engines.windows_ocr import _normalize
+
+    img = Image.new("RGB", (60, 30), (30, 30, 30))
+    draw = ImageDraw.Draw(img)
+    draw.rectangle((0, 15, 59, 29), fill=(70, 20, 20))  # red diff row
+    draw.rectangle((5, 3, 10, 10), fill=(197, 134, 192))  # purple bracket
+    draw.rectangle((20, 3, 25, 10), fill=(90, 110, 80))  # dim comment
+    draw.rectangle((5, 18, 10, 25), fill=(212, 212, 212))  # text on the red row
+    out = _normalize(img).convert("L")
+    assert out.getpixel((40, 5)) == 255 and out.getpixel((40, 22)) == 255  # backgrounds
+    assert out.getpixel((7, 6)) < 100 and out.getpixel((7, 21)) < 100
+    assert out.getpixel((22, 6)) < 200

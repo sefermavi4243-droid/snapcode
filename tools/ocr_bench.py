@@ -7,6 +7,7 @@ error rate (CER), exact-line accuracy and the most common mistakes.
     python tools/ocr_bench.py                 # PIL and Qt renderings
     python tools/ocr_bench.py --renderer qt -v
     python tools/ocr_bench.py --no-repair     # baseline without snapcode.glyphs
+    python tools/ocr_bench.py --fixtures DIR  # real screenshots: name.png + name.txt
 
 PIL renders like the glyph templates do, so it flatters the repair pass; the
 Qt renderings (DirectWrite, scaling, JPEG) are the more honest number.
@@ -143,6 +144,15 @@ def render_qt(code: str, family: str, px: int, dark: bool, scale: float, jpeg: b
     return png
 
 
+def fixture_cases(folder: Path):
+    """Real screenshots, each with the expected text in a .txt of the same name."""
+    for png in sorted(folder.glob("*.png")):
+        truth = png.with_suffix(".txt")
+        if truth.exists():
+            code = truth.read_text(encoding="utf-8").rstrip("\n")
+            yield f"real {png.stem}", code, lambda p=png: p.read_bytes()
+
+
 def cases(renderer: str):
     if renderer in ("pil", "both"):
         for name, code in SNIPPETS.items():
@@ -167,6 +177,7 @@ def cases(renderer: str):
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--renderer", choices=("pil", "qt", "both"), default="both")
+    parser.add_argument("--fixtures", type=Path, help="score real screenshots in this folder instead")
     parser.add_argument("--no-repair", action="store_true", help="skip the glyph repair pass")
     parser.add_argument("--no-structure", action="store_true",
                         help="skip bracket pairing and identifier unification (snapcode.codefix)")
@@ -190,7 +201,7 @@ def main() -> None:
     chars = errors = lines_total = lines_ok = 0
     elapsed = []
     results = {}
-    for label, code, render in cases(args.renderer):
+    for label, code, render in fixture_cases(args.fixtures) if args.fixtures else cases(args.renderer):
         start = time.perf_counter()
         got = pipeline.recognize(render(), settings).code.rstrip("\n")
         elapsed.append(time.perf_counter() - start)

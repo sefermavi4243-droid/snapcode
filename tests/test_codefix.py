@@ -1,4 +1,4 @@
-from snapcode.codefix import balance_brackets, unify_identifiers
+from snapcode.codefix import balance_brackets, fix_tokens, unify_identifiers
 
 
 def test_lone_closing_line_follows_its_block():
@@ -45,3 +45,13 @@ def test_keywords_anchor_corrections():
 def test_leaves_distinct_names_alone():
     text = "int l1 = 0, I1 = 1;\nreturn l1 + I1 + l + i;"
     assert unify_identifiers(text) == (text, 0)
+
+
+def test_fixes_tokens_code_cannot_contain():
+    text = "def f() -Y bool:\n    return metrics.1ineSpacing(1ine) + 1en(x)"
+    assert fix_tokens(text) == ("def f() -> bool:\n    return metrics.lineSpacing(line) + len(x)", 4)
+
+
+def test_keeps_numbers_with_units():
+    text = "margin: 1px 1rem; x = 1e5 + 1.1 + v1abc  # 1st"
+    assert fix_tokens(text) == (text, 0)

@@ -20,7 +20,7 @@ Sıradan OCR boşlukları yok sayar; kod için bu ölümcüldür (Python'da giri
 | `$`, `>>>`, `PS C:\>` istemleri | Terminal ve REPL istemlerini temizler, çıktı satırlarını korur |
 | Bir satır birkaç parçaya bölünür | Kelimeleri dikey konuma göre yeniden satırlara toplar |
 | “Akıllı” tırnaklar, `ﬁ` bitişik harfleri, Consolas'ın çizgili `Ø` sıfırı | ASCII karşılıklarına çevirir |
-| Koyu tema | Görüntüyü otomatik ters çevirip büyütür, kenar boşluğu ekler |
+| Koyu tema, renkli sözdizimi, diff satır renkleri | Mürekkebi her piksel satırının kendi arka plan rengine uzaklığıyla ölçer; renkli parantezler ve soluk yorumlar kaybolmaz. Büyütür, kenar boşluğu ekler |
 
 ## Özellikler
 

@@ -10,6 +10,8 @@ from PySide6.QtWidgets import (
 )
 
 from .. import languages
+from ..config import APP_NAME
+from ..i18n import t
 from ..history import History
 from .theme import CodeHighlighter, app_icon
 
@@ -18,7 +20,7 @@ class HistoryWindow(QMainWindow):
     def __init__(self, history: History) -> None:
         super().__init__()
         self._history = history
-        self.setWindowTitle("SnapCode — Geçmiş")
+        self.setWindowTitle(t("{app} — Geçmiş", app=APP_NAME))
         self.setWindowIcon(app_icon())
         self.resize(1100, 640)
 
@@ -27,7 +29,7 @@ class HistoryWindow(QMainWindow):
         layout = QVBoxLayout(root)
         layout.setContentsMargins(14, 14, 14, 14)
 
-        self.search = QLineEdit(placeholderText="Kodda ara…  (ör. useEffect, SELECT, python)")
+        self.search = QLineEdit(placeholderText=t("Kodda ara…  (ör. useEffect, SELECT, python)"))
         self._debounce = QTimer(singleShot=True, interval=200, timeout=self.refresh)
         self.search.textChanged.connect(self._debounce.start)
         layout.addWidget(self.search)
@@ -48,11 +50,11 @@ class HistoryWindow(QMainWindow):
         rl.addWidget(self.thumb)
         rl.addWidget(self.editor, 1)
         buttons = QHBoxLayout()
-        delete = QPushButton("Sil")
+        delete = QPushButton(t("Sil"))
         delete.clicked.connect(self._delete)
-        clear = QPushButton("Tümünü temizle")
+        clear = QPushButton(t("Tümünü temizle"))
         clear.clicked.connect(self._clear)
-        copy = QPushButton("Kopyala", objectName="primary")
+        copy = QPushButton(t("Kopyala"), objectName="primary")
         copy.clicked.connect(self._copy)
         buttons.addWidget(delete)
         buttons.addWidget(clear)
@@ -68,7 +70,7 @@ class HistoryWindow(QMainWindow):
         self.list.clear()
         for snip in self._history.search(self.search.text().strip()):
             lang = languages.by_key(snip.language)
-            item = QListWidgetItem(f"{snip.title}\n{lang.name} · {snip.created_at:%d.%m.%Y %H:%M}")
+            item = QListWidgetItem(f"{snip.title}\n{t(lang.name)} · {snip.created_at:%d.%m.%Y %H:%M}")
             item.setData(Qt.UserRole, snip)
             self.list.addItem(item)
         if self.list.count():
@@ -105,6 +107,6 @@ class HistoryWindow(QMainWindow):
             self.refresh()
 
     def _clear(self) -> None:
-        if QMessageBox.question(self, "Geçmişi temizle", "Tüm geçmiş silinsin mi?") == QMessageBox.Yes:
+        if QMessageBox.question(self, t("Geçmişi temizle"), t("Tüm geçmiş silinsin mi?")) == QMessageBox.Yes:
             self._history.clear()
             self.refresh()

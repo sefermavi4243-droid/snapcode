@@ -7,6 +7,8 @@ from ctypes import wintypes
 
 from PySide6.QtCore import QThread, Signal
 
+from .i18n import t
+
 MOD_ALT, MOD_CONTROL, MOD_SHIFT, MOD_WIN, MOD_NOREPEAT = 0x1, 0x2, 0x4, 0x8, 0x4000
 WM_HOTKEY, WM_QUIT = 0x0312, 0x0012
 
@@ -29,9 +31,9 @@ def parse(combo: str) -> tuple[int, int]:
         elif len(part) == 1 and part.isalnum():
             vk = ord(part.upper())
         else:
-            raise ValueError(f"Bilinmeyen tuş: {part!r}")
+            raise ValueError(t("Bilinmeyen tuş: {key}", key=repr(part)))
     if vk is None:
-        raise ValueError("Kısayolda bir ana tuş olmalı (örn. ctrl+shift+x).")
+        raise ValueError(t("Kısayolda bir ana tuş olmalı (örn. ctrl+shift+x)."))
     return mods, vk
 
 
@@ -59,7 +61,7 @@ class HotkeyListener(QThread):
             if user32.RegisterHotKey(None, index, mods | MOD_NOREPEAT, vk):
                 ids[index] = name
             else:
-                self.failed.emit(f"{combo} kısayolu başka bir uygulama tarafından kullanılıyor.")
+                self.failed.emit(t("{combo} kısayolu başka bir uygulama tarafından kullanılıyor.", combo=combo))
 
         msg = wintypes.MSG()
         while user32.GetMessageW(ctypes.byref(msg), None, 0, 0) > 0:

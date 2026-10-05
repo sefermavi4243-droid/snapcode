@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 
 from . import glyphs, languages
 from .config import Settings
+from .i18n import t
 from .postprocess import BuildOptions, build_code, fix_artifacts
 
 ENGINES = {
@@ -70,7 +71,7 @@ def recognize(png: bytes, settings: Settings, engine: str | None = None) -> Reco
                 result = _claude(png, settings)
                 engine = "claude"
             except ClaudeError as exc:
-                fallback_note = f"Claude başarısız ({exc}), Windows OCR kullanıldı"
+                fallback_note = t("Claude başarısız ({error}), Windows OCR kullanıldı", error=exc)
     elif engine == "claude":
         result = _claude(png, settings)
 

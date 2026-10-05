@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 
 from .. import autostart, hotkey, ide
 from ..config import Settings
+from ..i18n import LANGUAGES, t
 from ..pipeline import ENGINES
 from .theme import app_icon
 
@@ -15,7 +16,7 @@ from .theme import app_icon
 class SettingsDialog(QDialog):
     def __init__(self, settings: Settings, ocr_languages: list[str], parent=None) -> None:
         super().__init__(parent)
-        self.setWindowTitle("Ayarlar")
+        self.setWindowTitle(t("Ayarlar"))
         self.setWindowIcon(app_icon())
         self.setMinimumWidth(440)
         self._settings = settings
@@ -25,21 +26,27 @@ class SettingsDialog(QDialog):
         form.setVerticalSpacing(8)
 
         self.hotkey = QLineEdit(settings.hotkey)
-        form.addRow("Kısayol", self.hotkey)
+        form.addRow(t("Kısayol"), self.hotkey)
+
+        self.ui_language = QComboBox()
+        for key, label in LANGUAGES.items():
+            self.ui_language.addItem(t(label), key)
+        self.ui_language.setCurrentIndex(max(0, self.ui_language.findData(settings.ui_language)))
+        form.addRow(t("Arayüz dili"), self.ui_language)
 
         self.engine = QComboBox()
         for key, label in ENGINES.items():
-            self.engine.addItem(label, key)
+            self.engine.addItem(t(label), key)
         self.engine.setCurrentIndex(max(0, self.engine.findData(settings.engine)))
-        form.addRow("Tanıma", self.engine)
+        form.addRow(t("Tanıma"), self.engine)
 
         self.ocr_lang = QComboBox()
         self.ocr_lang.addItems(ocr_languages or [settings.ocr_language])
         self.ocr_lang.setCurrentText(settings.ocr_language)
-        form.addRow("OCR dili", self.ocr_lang)
+        form.addRow(t("OCR dili"), self.ocr_lang)
 
         self.ide = QComboBox()
-        self.ide.addItem("Otomatik (dile göre en uygun)", "auto")
+        self.ide.addItem(t("Otomatik (dile göre en uygun)"), "auto")
         for target in ide.detect():
             self.ide.addItem(target.name, target.key)
         self.ide.setCurrentIndex(max(0, self.ide.findData(settings.ide)))
@@ -47,29 +54,29 @@ class SettingsDialog(QDialog):
 
         self.api_key = QLineEdit(settings.api_key)
         self.api_key.setEchoMode(QLineEdit.Password)
-        self.api_key.setPlaceholderText("İsteğe bağlı")
-        form.addRow("Anthropic API anahtarı", self.api_key)
+        self.api_key.setPlaceholderText(t("İsteğe bağlı"))
+        form.addRow(t("Anthropic API anahtarı"), self.api_key)
 
         self.checks = {}
         for field, label in [
-            ("instant_copy", "Seçimi bırakınca hemen kopyala"),
-            ("watch_clipboard", "Panodaki ekran görüntülerini otomatik çöz"),
-            ("keep_history", "Geçmişi sakla"),
+            ("instant_copy", t("Seçimi bırakınca hemen kopyala")),
+            ("watch_clipboard", t("Panodaki ekran görüntülerini otomatik çöz")),
+            ("keep_history", t("Geçmişi sakla")),
         ]:
             box = QCheckBox(label)
             box.setChecked(getattr(settings, field))
             self.checks[field] = box
             form.addRow("", box)
 
-        self.autostart = QCheckBox("Windows ile başlat")
+        self.autostart = QCheckBox(t("Windows ile başlat"))
         self.autostart.setChecked(autostart.is_enabled())
         form.addRow("", self.autostart)
 
         self.error = QLabel(objectName="muted")
         buttons = QDialogButtonBox(QDialogButtonBox.Save | QDialogButtonBox.Cancel)
-        buttons.button(QDialogButtonBox.Save).setText("Kaydet")
+        buttons.button(QDialogButtonBox.Save).setText(t("Kaydet"))
         buttons.button(QDialogButtonBox.Save).setObjectName("primary")
-        buttons.button(QDialogButtonBox.Cancel).setText("İptal")
+        buttons.button(QDialogButtonBox.Cancel).setText(t("İptal"))
         buttons.accepted.connect(self._accept)
         buttons.rejected.connect(self.reject)
 
@@ -92,6 +99,7 @@ class SettingsDialog(QDialog):
         s.ocr_language = self.ocr_lang.currentText()
         s.api_key = self.api_key.text().strip()
         s.ide = self.ide.currentData()
+        s.ui_language = self.ui_language.currentData()
         for field, box in self.checks.items():
             setattr(s, field, box.isChecked())
         if self.autostart.isChecked() != autostart.is_enabled():

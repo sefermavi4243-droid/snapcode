@@ -6,7 +6,8 @@ import sys
 from pathlib import Path
 
 _KEY = r"Software\Microsoft\Windows\CurrentVersion\Run"
-_NAME = "SnapCode"
+_NAME = "CodeLift"
+_LEGACY_NAME = "SnapCode"
 
 
 def command() -> str:
@@ -38,3 +39,19 @@ def set_enabled(enabled: bool) -> None:
                 winreg.DeleteValue(key, _NAME)
             except FileNotFoundError:
                 pass
+
+
+def migrate() -> None:
+    """Carry a SnapCode-era autostart entry over to the new name and path."""
+    try:
+        import winreg
+
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, _KEY, 0, winreg.KEY_ALL_ACCESS) as key:
+            try:
+                winreg.QueryValueEx(key, _LEGACY_NAME)
+            except FileNotFoundError:
+                return
+            winreg.DeleteValue(key, _LEGACY_NAME)
+            winreg.SetValueEx(key, _NAME, 0, winreg.REG_SZ, command())
+    except OSError:
+        pass

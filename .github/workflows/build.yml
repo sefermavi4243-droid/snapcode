@@ -37,13 +37,13 @@ jobs:
       - name: Self-test frozen exe
         continue-on-error: true
         run: |
-          $p = Start-Process build\dist\SnapCode\SnapCode.exe -ArgumentList "--selftest", "$env:TEMP\st.txt" -Wait -PassThru
+          $p = Start-Process build\dist\CodeLift\CodeLift.exe -ArgumentList "--selftest", "$env:TEMP\st.txt" -Wait -PassThru
           Get-Content "$env:TEMP\st.txt"
           exit $p.ExitCode
 
       - uses: actions/upload-artifact@v4
         with:
-          name: SnapCode-Setup
+          name: CodeLift-Setup
           path: build/installer/*.exe
 
       - name: Publish release

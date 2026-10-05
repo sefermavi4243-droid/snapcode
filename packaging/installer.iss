@@ -4,8 +4,10 @@
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif
-#define AppName "SnapCode"
-#define AppExe "SnapCode.exe"
+#define AppName "CodeLift"
+#define AppExe "CodeLift.exe"
+; Up to 1.4 the app was SnapCode; the same AppId upgrades it in place.
+#define LegacyName "SnapCode"
 
 [Setup]
 AppId={{6F1C5B8E-2D4A-4F7B-9C3E-8A1D2B7E4C90}
@@ -22,7 +24,7 @@ DisableProgramGroupPage=yes
 DisableDirPage=auto
 PrivilegesRequired=lowest
 OutputDir=..\build\installer
-OutputBaseFilename=SnapCode-Setup-{#AppVersion}
+OutputBaseFilename=CodeLift-Setup-{#AppVersion}
 SetupIconFile=snapcode.ico
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
@@ -40,24 +42,31 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [CustomMessages]
-turkish.AutoStart=Windows açıldığında SnapCode'u başlat
-english.AutoStart=Start SnapCode when Windows starts
-turkish.Launch=SnapCode'u şimdi başlat
-english.Launch=Launch SnapCode now
+turkish.AutoStart=Windows açıldığında CodeLift'i başlat
+english.AutoStart=Start CodeLift when Windows starts
+turkish.Launch=CodeLift'i şimdi başlat
+english.Launch=Launch CodeLift now
 
 [Tasks]
 Name: "autostart"; Description: "{cm:AutoStart}"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\build\dist\SnapCode\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\build\dist\CodeLift\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
+[InstallDelete]
+; Leftovers of the SnapCode name.
+Type: files; Name: "{app}\{#LegacyName}.exe"
+Type: files; Name: "{autoprograms}\{#LegacyName}.lnk"
+Type: files; Name: "{autodesktop}\{#LegacyName}.lnk"
+
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "SnapCode"; ValueData: """{app}\{#AppExe}"""; Flags: uninsdeletevalue; Tasks: autostart
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueName: "{#LegacyName}"; Flags: deletevalue
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "{#AppName}"; ValueData: """{app}\{#AppExe}"""; Flags: uninsdeletevalue; Tasks: autostart
 
 [Run]
 Filename: "{app}\{#AppExe}"; Description: "{cm:Launch}"; Flags: nowait postinstall skipifsilent
@@ -68,23 +77,23 @@ Type: filesandordirs; Name: "{app}"
 [Code]
 // A tray app has no window to close politely, so stop it before files are
 // replaced (upgrade) or removed (uninstall). Settings and history live in
-// %APPDATA%\SnapCode and are kept.
-procedure StopSnapCode();
+// %APPDATA%\CodeLift (moved from %APPDATA%\SnapCode on first start) and are kept.
+procedure StopApp();
 var
   Code: Integer;
 begin
-  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#AppExe}', '', SW_HIDE, ewWaitUntilTerminated, Code);
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#AppExe} /IM {#LegacyName}.exe', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Sleep(300);
 end;
 
 function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
-  StopSnapCode();
+  StopApp();
   Result := '';
 end;
 
 function InitializeUninstall(): Boolean;
 begin
-  StopSnapCode();
+  StopApp();
   Result := True;
 end;

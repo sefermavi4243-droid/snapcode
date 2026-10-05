@@ -13,6 +13,8 @@ import json
 import sys
 
 from . import __version__
+from .config import Settings
+from .i18n import set_language, t
 
 
 def _read_clipboard_png() -> bytes:
@@ -20,7 +22,7 @@ def _read_clipboard_png() -> bytes:
 
     image = ImageGrab.grabclipboard()
     if image is None or isinstance(image, list):
-        raise SystemExit("Panoda görüntü yok.")
+        raise SystemExit(t("Panoda görüntü yok."))
     out = io.BytesIO()
     image.save(out, "PNG")
     return out.getvalue()
@@ -35,15 +37,16 @@ def _copy(text: str) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="snapcode", description="Ekran görüntüsündeki kodu metne çevir.")
-    parser.add_argument("image", nargs="?", help="görüntü dosyası (yoksa tepsi uygulaması başlar)")
-    parser.add_argument("--clipboard", action="store_true", help="panodaki görüntüyü kullan")
-    parser.add_argument("--engine", choices=["auto", "windows", "claude"], help="tanıma motoru")
-    parser.add_argument("--copy", action="store_true", help="sonucu panoya kopyala")
+    set_language(Settings.load().ui_language)
+    parser = argparse.ArgumentParser(prog="codelift", description=t("Ekran görüntüsündeki kodu metne çevir."))
+    parser.add_argument("image", nargs="?", help=t("görüntü dosyası (yoksa tepsi uygulaması başlar)"))
+    parser.add_argument("--clipboard", action="store_true", help=t("panodaki görüntüyü kullan"))
+    parser.add_argument("--engine", choices=["auto", "windows", "claude"], help=t("tanıma motoru"))
+    parser.add_argument("--copy", action="store_true", help=t("sonucu panoya kopyala"))
     parser.add_argument("--ide", nargs="?", const="auto", metavar="IDE",
-                        help="sonucu IDE'de aç (vscode, cursor, pycharm, …; boşsa otomatik)")
-    parser.add_argument("--json", action="store_true", help="JSON çıktı (dil, motor, süre)")
-    parser.add_argument("--version", action="version", version=f"snapcode {__version__}")
+                        help=t("sonucu IDE'de aç (vscode, cursor, pycharm, …; boşsa otomatik)"))
+    parser.add_argument("--json", action="store_true", help=t("JSON çıktı (dil, motor, süre)"))
+    parser.add_argument("--version", action="version", version=f"codelift {__version__}")
     args = parser.parse_args(argv)
 
     if not args.image and not args.clipboard:
@@ -51,7 +54,6 @@ def main(argv: list[str] | None = None) -> int:
 
         return run_gui()
 
-    from .config import Settings
     from .pipeline import recognize
 
     if args.clipboard:
@@ -63,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         result = recognize(png, Settings.load(), args.engine)
     except RuntimeError as exc:  # ClaudeError, WindowsOcrUnavailable
-        print(f"snapcode: {exc}", file=sys.stderr)
+        print(f"codelift: {exc}", file=sys.stderr)
         return 1
     if args.copy:
         _copy(result.code)

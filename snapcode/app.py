@@ -11,15 +11,16 @@ from PySide6.QtCore import QBuffer, QLockFile, QObject, QRect, QRunnable, QThrea
 from PySide6.QtGui import QAction, QGuiApplication, QImage
 from PySide6.QtWidgets import QApplication, QFileDialog, QMenu, QMessageBox, QSystemTrayIcon
 
-from . import __version__, ide, pipeline
-from .config import Settings, data_dir
+from . import __version__, autostart, ide, pipeline
+from .config import APP_NAME, Settings, data_dir
 from .history import History
 from .hotkey import HotkeyListener
+from .i18n import set_language, t
 from .ui.capture import CaptureSession
 from .ui.editor import EditorWindow, save_code
 from .ui.history_window import HistoryWindow
 from .ui.settings_dialog import SettingsDialog
-from .ui.theme import STYLESHEET, Toast, app_icon
+from .ui.theme import STYLESHEET, Toast, app_icon, load_brand_fonts
 
 
 def image_to_png(image: QImage) -> bytes:
@@ -71,7 +72,7 @@ class Job:
             self.waiters.append(callback)
 
 
-class SnapCodeApp(QObject):
+class CodeLiftApp(QObject):
     def __init__(self, app: QApplication) -> None:
         super().__init__()
         self.app = app
@@ -95,30 +96,30 @@ class SnapCodeApp(QObject):
         QGuiApplication.clipboard().dataChanged.connect(self._clipboard_changed)
         QThreadPool.globalInstance().start(ide.detect)  # warm the cache off the UI thread
         self._start_hotkeys()
-        Toast.show_text(f"SnapCode çalışıyor · {self.settings.hotkey.title()}")
+        Toast.show_text(t("{app} çalışıyor · {combo}", app=APP_NAME, combo=self.settings.hotkey.title()))
 
     # -- tray --------------------------------------------------------------
     def _build_menu(self) -> None:
         menu = QMenu()
         self.capture_action = menu.addAction("", self.capture)
-        menu.addAction("Panodaki görüntüden kod al", self.from_clipboard)
-        menu.addAction("Görüntü dosyasından…", self.from_file)
+        menu.addAction(t("Panodaki görüntüden kod al"), self.from_clipboard)
+        menu.addAction(t("Görüntü dosyasından…"), self.from_file)
         menu.addSeparator()
-        self.watch_action = QAction("Panoyu izle", menu, checkable=True, checked=self.settings.watch_clipboard)
+        self.watch_action = QAction(t("Panoyu izle"), menu, checkable=True, checked=self.settings.watch_clipboard)
         self.watch_action.toggled.connect(self._set_watch)
         menu.addAction(self.watch_action)
-        menu.addAction("Geçmiş", self.show_history)
-        menu.addAction("Ayarlar", self.show_settings)
+        menu.addAction(t("Geçmiş"), self.show_history)
+        menu.addAction(t("Ayarlar"), self.show_settings)
         menu.addSeparator()
-        menu.addAction("Çıkış", self.quit)
+        menu.addAction(t("Çıkış"), self.quit)
         self.menu = menu
         self.tray.setContextMenu(menu)
         self._label_hotkey()
 
     def _label_hotkey(self) -> None:
         combo = self.settings.hotkey.title()
-        self.capture_action.setText(f"Kod yakala\t{combo}")
-        self.tray.setToolTip(f"SnapCode {__version__} · {combo}")
+        self.capture_action.setText(t("Kod yakala\t{combo}", combo=combo))
+        self.tray.setToolTip(f"{APP_NAME} {__version__} · {combo}")
 
     def _tray_activated(self, reason) -> None:
         if reason == QSystemTrayIcon.Trigger:
@@ -164,7 +165,7 @@ class SnapCodeApp(QObject):
 
         def show_info(j: Job) -> None:
             if session is not None and session is self._session:
-                session.set_info(self._summary(j))
+                session.set_info(self._summary(j), ok=j.error is None)
                 if j.result:
                     target = ide.choose(j.result.language.key, self.settings.ide)
                     session.set_ide_name(target.name)
@@ -196,7 +197,7 @@ class SnapCodeApp(QObject):
             self._tasks.discard(task)
             job.result, job.error = result, error
             if result is not None and not result.code.strip():
-                job.result, job.error = None, "Kod bulunamadı"
+                job.result, job.error = None, t("Kod bulunamadı")
             for callback in job.waiters:
                 callback(job)
             job.waiters.clear()
@@ -210,12 +211,12 @@ class SnapCodeApp(QObject):
         if job.error:
             return job.error
         r = job.result
-        return f"{r.language.name} · {r.line_count} satır"
+        return t("{language} · {n} satır", language=t(r.language.name), n=r.line_count)
 
     def _action(self, name: str, image: QImage, rect: QRect) -> None:
         if name == "image":
             QGuiApplication.clipboard().setImage(image)
-            Toast.show_text("Görüntü kopyalandı")
+            Toast.show_text(t("Görüntü kopyalandı"))
             return
         job = self._job(image)
         job.then(lambda j: self._deliver(name, j))
@@ -228,23 +229,23 @@ class SnapCodeApp(QObject):
         snippet_id = self._remember(job)
         if name == "copy":
             QGuiApplication.clipboard().setText(result.code)
-            Toast.show_text(f"Kod kopyalandı · {self._summary(job)}")
+            Toast.show_text(t("Kod kopyalandı · {summary}", summary=self._summary(job)))
         elif name == "ide":
             self.send_to_ide(result.code, result.language)
         elif name == "edit":
             self.open_editor(result, snippet_id)
         elif name == "save":
             if save_code(None, result.code, result.language):
-                Toast.show_text("Kaydedildi")
+                Toast.show_text(t("Kaydedildi"))
 
     def send_to_ide(self, code: str, language, ide_key: str | None = None) -> None:
         try:
             target, path = ide.send(code, language, ide_key or self.settings.ide)
         except OSError as exc:
-            Toast.show_text(f"IDE açılamadı: {exc}", 3500)
+            Toast.show_text(t("IDE açılamadı: {error}", error=exc), 3500)
             return
         QGuiApplication.clipboard().setText(code)
-        Toast.show_text(f"{target.name} içinde açıldı · kod panoda da")
+        Toast.show_text(t("{ide} içinde açıldı · kod panoda da", ide=target.name))
 
     def _remember(self, job: Job) -> int | None:
         if not self.settings.keep_history:
@@ -267,7 +268,7 @@ class SnapCodeApp(QObject):
 
     # -- other sources -----------------------------------------------------
     def _recognize_image(self, image: QImage) -> None:
-        Toast.show_text("Okunuyor…", 10000)
+        Toast.show_text(t("Okunuyor…"), 10000)
         job = Job(image_to_png(image))
         self._run(job)
         job.then(lambda j: self._deliver("copy", j))
@@ -275,16 +276,16 @@ class SnapCodeApp(QObject):
     def from_clipboard(self) -> None:
         image = QGuiApplication.clipboard().image()
         if image.isNull():
-            Toast.show_text("Panoda görüntü yok")
+            Toast.show_text(t("Panoda görüntü yok"))
         else:
             self._recognize_image(image)
 
     def from_file(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(None, "Görüntü aç", "", "Görüntüler (*.png *.jpg *.jpeg *.bmp *.webp)")
+        path, _ = QFileDialog.getOpenFileName(None, t("Görüntü aç"), "", t("Görüntüler (*.png *.jpg *.jpeg *.bmp *.webp)"))
         if path:
             image = QImage(path)
             if image.isNull():
-                Toast.show_text("Görüntü açılamadı")
+                Toast.show_text(t("Görüntü açılamadı"))
             else:
                 self._recognize_image(image)
 
@@ -319,9 +320,13 @@ class SnapCodeApp(QObject):
             langs = available_languages()
         except Exception:
             langs = []
-        old_hotkey = self.settings.hotkey
+        old_hotkey, old_language = self.settings.hotkey, self.settings.ui_language
         if SettingsDialog(self.settings, langs).exec():
             self.settings.save()
+            if self.settings.ui_language != old_language:
+                # Menus are built once; rebuild them in the new language.
+                set_language(self.settings.ui_language)
+                self._build_menu()
             self.watch_action.setChecked(self.settings.watch_clipboard)
             if self.settings.hotkey != old_hotkey:
                 self._start_hotkeys()
@@ -335,20 +340,23 @@ class SnapCodeApp(QObject):
 
 
 def run_gui() -> int:
+    set_language(Settings.load().ui_language)
+    autostart.migrate()
     app = QApplication(sys.argv)
-    app.setApplicationName("SnapCode")
+    app.setApplicationName(APP_NAME)
     app.setQuitOnLastWindowClosed(False)
     app.setStyle("Fusion")
     app.setStyleSheet(STYLESHEET)
     app.setWindowIcon(app_icon())
+    load_brand_fonts()
 
     lock = QLockFile(str(Path(data_dir()) / "snapcode.lock"))
     if not lock.tryLock(100):
-        QMessageBox.information(None, "SnapCode", "SnapCode zaten çalışıyor.")
+        QMessageBox.information(None, APP_NAME, t("{app} zaten çalışıyor.", app=APP_NAME))
         return 0
     if not QSystemTrayIcon.isSystemTrayAvailable():
-        QMessageBox.critical(None, "SnapCode", "Sistem tepsisi bulunamadı.")
+        QMessageBox.critical(None, APP_NAME, t("Sistem tepsisi bulunamadı."))
         return 1
 
-    controller = SnapCodeApp(app)  # noqa: F841 - keeps the tray alive
+    controller = CodeLiftApp(app)  # noqa: F841 - keeps the tray alive
     return app.exec()

@@ -4,21 +4,39 @@ from __future__ import annotations
 
 from PySide6.QtCore import QObject, QPoint, QRect, QRectF, QRunnable, QSize, Qt, QThreadPool, QTimer, Signal
 from PySide6.QtGui import QColor, QCursor, QFont, QGuiApplication, QImage, QPainter, QPainterPath, QPen
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QToolButton, QWidget
+from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QHBoxLayout, QLabel, QToolButton, QWidget
 
 from .. import blocks
-from .theme import ACCENT, icon
+from ..i18n import t
+from .theme import EMBER, HIGHLIGHT, INK, LEAD, icon
 
-HANDLE = 6
+HANDLE = 8
 MIN_SIZE = 6
-_SHADE = QColor(0, 0, 0, 110)
+_SHADE = QColor(0, 0, 0, 115)
+# Status cell colours: reading, read, nothing found. The turquoise is
+# darkened a little so it reads on the paper-coloured toolbar.
+STATUS = {"busy": LEAD.name(), "ok": "#1FA597", "error": EMBER.name()}
 
 TOOLBAR_STYLE = """
-QWidget#toolbar { background: #ffffff; border: 1px solid #c4c7c5; border-radius: 3px; }
-QToolButton { border: none; border-radius: 2px; padding: 4px; background: transparent; }
-QToolButton:hover { background: #e8eaed; }
-QLabel { color: #5f6368; font-family: 'Segoe UI'; font-size: 8pt; padding: 0 6px; }
+QFrame#toolbar { background: #F2F7F7; border: 1px solid rgba(15, 27, 36, 46); border-radius: 6px; }
+QToolButton { border: none; border-radius: 4px; padding: 7px; background: transparent; }
+QToolButton:hover { background: rgba(15, 27, 36, 18); }
+QToolButton:pressed { background: rgba(15, 27, 36, 32); }
+QToolButton#primary { background: #2EC4B6; }
+QToolButton#primary:hover { background: #45D3C6; }
+QToolButton#primary:pressed { background: #25A99C; }
+QLabel#status { color: #0F1B24; font-family: 'JetBrains Mono', 'Cascadia Mono', 'Consolas'; font-size: 8.5pt;
+                padding: 0 8px 0 2px; }
+QLabel#cell { min-width: 6px; max-width: 6px; min-height: 12px; max-height: 12px; margin-left: 6px; }
+QFrame#sep { background: rgba(15, 27, 36, 36); min-width: 1px; max-width: 1px; margin: 7px 3px; }
 """
+
+
+def _brand_mono(points: float) -> QFont:
+    font = QFont()
+    font.setFamilies(["JetBrains Mono", "Cascadia Mono", "Consolas"])
+    font.setPointSizeF(points)
+    return font
 
 
 def qimage_to_pil(image: QImage):
@@ -106,33 +124,47 @@ class Overlay(QWidget):
 
     # -- toolbar -----------------------------------------------------------
     def _build_toolbar(self) -> None:
-        bar = QWidget(self, objectName="toolbar")
+        bar = QFrame(self, objectName="toolbar")
         bar.setStyleSheet(TOOLBAR_STYLE)
-        bar.setAttribute(Qt.WA_StyledBackground)
         bar.setCursor(Qt.ArrowCursor)
+        shadow = QGraphicsDropShadowEffect(bar)
+        shadow.setBlurRadius(18)
+        shadow.setOffset(0, 4)
+        shadow.setColor(QColor(0, 0, 0, 90))
+        bar.setGraphicsEffect(shadow)
         layout = QHBoxLayout(bar)
-        layout.setContentsMargins(3, 3, 3, 3)
-        layout.setSpacing(1)
-        self.info = QLabel("")
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(2)
+        # Status: a small cursor "cell" in the state colour plus the result.
+        self.cell = QLabel(objectName="cell")
+        self.info = QLabel("", objectName="status")
+        layout.addWidget(self.cell)
         layout.addWidget(self.info)
+        layout.addWidget(QFrame(objectName="sep"))
         for name, glyph, tip in [
-            ("copy", "code", "Kodu kopyala (Ctrl+C, Enter, çift tık)"),
-            ("ide", "ide", "IDE'de aç (Ctrl+O)"),
-            ("edit", "edit", "Düzenle (Ctrl+E)"),
-            ("save", "save", "Kodu dosyaya kaydet (Ctrl+S)"),
-            ("image", "image", "Görüntüyü kopyala (Ctrl+Shift+C)"),
-            ("close", "close", "Kapat (Esc)"),
+            ("copy", "code", t("Kodu kopyala (Ctrl+C, Enter, çift tık)")),
+            ("ide", "ide", t("IDE'de aç (Ctrl+O)")),
+            ("edit", "edit", t("Düzenle (Ctrl+E)")),
+            ("save", "save", t("Kodu dosyaya kaydet (Ctrl+S)")),
+            ("image", "image", t("Görüntüyü kopyala (Ctrl+Shift+C)")),
+            ("close", "close", t("Kapat (Esc)")),
         ]:
+            if name == "close":
+                layout.addWidget(QFrame(objectName="sep"))
             button = QToolButton()
-            button.setIcon(icon(glyph))
+            # Copy is the one strong button: turquoise with an ink glyph.
+            button.setIcon(icon(glyph, INK.name()))
             button.setIconSize(QSize(18, 18))
             button.setToolTip(tip)
+            if name == "copy":
+                button.setObjectName("primary")
             button.clicked.connect(lambda _=False, n=name: self._trigger(n))
             if name == "ide":
                 self.ide_button = button
             layout.addWidget(button)
         bar.hide()
         self.toolbar = bar
+        self._set_status("", "busy")
 
     def _place_toolbar(self) -> None:
         if self._sel.isNull() or self._drag_mode:
@@ -150,9 +182,12 @@ class Overlay(QWidget):
         self.toolbar.show()
         self.toolbar.raise_()
 
-    def set_info(self, text: str) -> None:
-        self.info.setText(text)
-        self.info.setVisible(bool(text))
+    def _set_status(self, text: str, state: str) -> None:
+        self.info.setText(text.lower() if text else t("okunuyor…"))
+        self.cell.setStyleSheet(f"background: {STATUS[state]};")
+
+    def set_info(self, text: str, ok: bool = True) -> None:
+        self._set_status(text, ("ok" if ok else "error") if text else "busy")
         self._place_toolbar()
 
     # -- selection ---------------------------------------------------------
@@ -335,16 +370,21 @@ class Overlay(QWidget):
         p.fillPath(shade, _SHADE)
 
         if not self._hover.isNull():
-            pen = QPen(ACCENT, 1, Qt.DashLine)
-            p.setPen(pen)
-            p.drawRect(self._hover.adjusted(0, 0, -1, -1))
+            # Highlighter dashes over a thin ink line: visible on any screen.
+            box = self._hover.adjusted(0, 0, -1, -1)
+            p.setPen(QPen(INK, 1))
+            p.drawRect(box)
+            p.setPen(QPen(HIGHLIGHT, 1, Qt.DashLine))
+            p.drawRect(box)
 
         if not self._sel.isNull():
-            p.setPen(QPen(ACCENT, 1))
             p.setBrush(Qt.NoBrush)
-            p.drawRect(self._sel.adjusted(0, 0, -1, -1))
-            p.setBrush(ACCENT)
-            p.setPen(QPen(Qt.white, 1))
+            p.setPen(QPen(INK, 1))
+            p.drawRect(self._sel.adjusted(-2, -2, 1, 1))
+            p.setPen(QPen(HIGHLIGHT, 2))
+            p.drawRect(QRectF(self._sel).adjusted(0, 0, -1, -1).adjusted(-0.5, -0.5, 0.5, 0.5))
+            p.setBrush(HIGHLIGHT)
+            p.setPen(QPen(INK, 1))
             for rect in self._handles().values():
                 p.drawRect(rect)
             phys = self._physical(self._sel)
@@ -352,14 +392,15 @@ class Overlay(QWidget):
         p.end()
 
     def _size_label(self, p: QPainter, text: str) -> None:
-        p.setFont(QFont("Segoe UI", 8))
-        w = p.fontMetrics().horizontalAdvance(text) + 10
-        y = self._sel.top() - 20 if self._sel.top() >= 20 else self._sel.top() + 2
-        box = QRect(self._sel.left(), y, w, 18)
+        p.setFont(_brand_mono(8))
+        w = p.fontMetrics().horizontalAdvance(text) + 14
+        y = self._sel.top() - 26 if self._sel.top() >= 26 else self._sel.top() + 4
+        box = QRectF(self._sel.left() - 2, y, w, 20)
+        p.setRenderHint(QPainter.Antialiasing)
         p.setPen(Qt.NoPen)
-        p.setBrush(QColor(0, 0, 0, 170))
-        p.drawRect(box)
-        p.setPen(Qt.white)
+        p.setBrush(INK)
+        p.drawRoundedRect(box, 3, 3)
+        p.setPen(HIGHLIGHT)
         p.drawText(box, Qt.AlignCenter, text)
 
 
@@ -409,12 +450,12 @@ class CaptureSession(QObject):
 
     def set_ide_name(self, name: str) -> None:
         for overlay in self.overlays:
-            overlay.ide_button.setToolTip(f"{name} içinde aç (Ctrl+O)")
+            overlay.ide_button.setToolTip(t("{ide} içinde aç (Ctrl+O)", ide=name))
 
-    def set_info(self, text: str) -> None:
+    def set_info(self, text: str, ok: bool = True) -> None:
         for overlay in self.overlays:
             if not overlay.selection.isNull():
-                overlay.set_info(text)
+                overlay.set_info(text, ok)
 
     def close(self) -> None:
         if self._closed:

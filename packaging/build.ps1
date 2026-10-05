@@ -1,4 +1,4 @@
-# Builds build\dist\SnapCode\SnapCode.exe and build\installer\SnapCode-Setup-<version>.exe
+# Builds build\dist\CodeLift\CodeLift.exe and build\installer\CodeLift-Setup-<version>.exe
 # Usage: powershell -ExecutionPolicy Bypass -File packaging\build.ps1 [-SkipSelfTest]
 param([switch]$SkipSelfTest)
 $ErrorActionPreference = "Stop"
@@ -6,7 +6,7 @@ $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
 $version = (Select-String -Path "snapcode\__init__.py" -Pattern '__version__ = "(.+)"').Matches[0].Groups[1].Value
-Write-Host "SnapCode $version"
+Write-Host "CodeLift $version"
 
 python packaging\make_icon.py
 if ($LASTEXITCODE) { throw "icon failed" }
@@ -17,8 +17,8 @@ if ($LASTEXITCODE) { throw "PyInstaller failed" }
 
 # Prove the frozen exe can still reach Windows OCR before shipping it.
 if (-not $SkipSelfTest) {
-    $out = Join-Path $env:TEMP "snapcode-selftest.txt"
-    $p = Start-Process build\dist\SnapCode\SnapCode.exe -ArgumentList "--selftest", $out -Wait -PassThru
+    $out = Join-Path $env:TEMP "codelift-selftest.txt"
+    $p = Start-Process build\dist\CodeLift\CodeLift.exe -ArgumentList "--selftest", $out -Wait -PassThru
     if ($p.ExitCode -ne 0) { throw "self-test failed: $(Get-Content $out -Raw)" }
     Write-Host "self-test ok"
 }

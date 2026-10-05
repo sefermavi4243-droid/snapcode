@@ -10,14 +10,16 @@ from PySide6.QtWidgets import (
 )
 
 from .. import ide, languages
+from ..config import APP_NAME
+from ..i18n import t
 from ..pipeline import Recognition
 from .theme import CodeHighlighter, Toast, app_icon
 
 
 def save_code(parent, code: str, language: languages.Language) -> bool:
     path, _ = QFileDialog.getSaveFileName(
-        parent, "Kodu kaydet", f"snippet{language.extension}",
-        f"{language.name} (*{language.extension});;Tüm dosyalar (*)",
+        parent, t("Kodu kaydet"), f"snippet{language.extension}",
+        f"{t(language.name)} (*{language.extension});;" + t("Tüm dosyalar (*)"),
     )
     if not path:
         return False
@@ -30,7 +32,7 @@ class EditorWindow(QWidget):
     def __init__(self, result: Recognition, on_edit=None, on_send=None) -> None:
         super().__init__()
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setWindowTitle("SnapCode")
+        self.setWindowTitle(APP_NAME)
         self.setWindowIcon(app_icon())
         self.setObjectName("root")
         self.snippet_id: int | None = None
@@ -49,15 +51,15 @@ class EditorWindow(QWidget):
         row.setContentsMargins(10, 6, 10, 6)
         self.lang = QComboBox()
         for lang in languages.LANGUAGES.values():
-            self.lang.addItem(lang.name, lang.key)
+            self.lang.addItem(t(lang.name), lang.key)
         self.lang.setCurrentIndex(max(0, self.lang.findData(result.language.key)))
         self.lang.currentIndexChanged.connect(self._language_changed)
         row.addWidget(self.lang)
-        row.addWidget(QLabel(f"{result.line_count} satır", objectName="muted"))
+        row.addWidget(QLabel(t("{n} satır", n=result.line_count), objectName="muted"))
         row.addStretch()
-        save = QPushButton("Kaydet")
+        save = QPushButton(t("Kaydet"))
         save.clicked.connect(self.save)
-        copy = QPushButton("Kopyala", objectName="primary")
+        copy = QPushButton(t("Kopyala"), objectName="primary")
         copy.setDefault(True)
         copy.clicked.connect(self.copy_and_close)
         row.addWidget(save)
@@ -84,7 +86,7 @@ class EditorWindow(QWidget):
     def _ide_button(self) -> QToolButton:
         """Click: default IDE. Arrow: pick any detected editor."""
         button = QToolButton()
-        button.setText("IDE'de aç")
+        button.setText(t("IDE'de aç"))
         button.setPopupMode(QToolButton.MenuButtonPopup)
         button.clicked.connect(lambda: self.send(None))
         menu = QMenu(button)
@@ -111,9 +113,9 @@ class EditorWindow(QWidget):
 
     def copy_and_close(self) -> None:
         QGuiApplication.clipboard().setText(self.editor.toPlainText())
-        Toast.show_text("Kod kopyalandı")
+        Toast.show_text(t("Kod kopyalandı"))
         self.close()
 
     def save(self) -> None:
         if save_code(self, self.editor.toPlainText(), self.language):
-            Toast.show_text("Kaydedildi")
+            Toast.show_text(t("Kaydedildi"))

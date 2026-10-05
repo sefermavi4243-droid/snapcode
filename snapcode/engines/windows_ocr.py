@@ -8,6 +8,7 @@ import io
 from PIL import Image, ImageChops
 
 from ..postprocess import OcrLine, OcrWord
+from ..i18n import t
 
 
 class PixelProbe:
@@ -130,7 +131,7 @@ async def _recognize(
     if engine is None:
         engine = OcrEngine.try_create_from_user_profile_languages()
     if engine is None:
-        raise WindowsOcrUnavailable("Bu sistemde Windows OCR dil paketi yüklü değil.")
+        raise WindowsOcrUnavailable(t("Bu sistemde Windows OCR dil paketi yüklü değil."))
 
     original = _normalize(source)
     image, scale, pad = _prepare(original, upscale)

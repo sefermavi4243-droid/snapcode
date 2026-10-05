@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QPointF, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import (
-    QColor, QGuiApplication, QIcon, QPainter, QPainterPath, QPen, QPixmap,
+    QColor, QFontDatabase, QGuiApplication, QIcon, QPainter, QPainterPath, QPen, QPixmap,
     QSyntaxHighlighter, QTextCharFormat,
 )
 from PySide6.QtWidgets import QLabel
@@ -13,6 +13,15 @@ from pygments.token import Comment, Keyword, Name, Number, String, Token
 from pygments.util import ClassNotFound
 
 ACCENT = QColor("#1a73e8")
+
+# Brand palette (CodeLift, "Ocean"): deep petrol ink, ice paper, turquoise
+# highlight, amber for "nothing found".
+INK = QColor("#0F1B24")
+PAPER = QColor("#F2F7F7")
+HIGHLIGHT = QColor("#2EC4B6")
+GRAPHITE = QColor("#1C2B36")
+LEAD = QColor("#8A9AA6")
+EMBER = QColor("#FF9F1C")
 
 STYLESHEET = """
 QWidget { font-family: 'Segoe UI'; font-size: 9pt; color: #202124; }
@@ -105,6 +114,13 @@ class CodeHighlighter(QSyntaxHighlighter):
             pos += len(value)
 
 
+def load_brand_fonts() -> None:
+    """Register the bundled JetBrains Mono, the brand's monospace face."""
+    from ..glyphs import BUNDLED_DIR
+
+    QFontDatabase.addApplicationFont(str(BUNDLED_DIR / "JetBrainsMono-Regular.ttf"))
+
+
 # --------------------------------------------------------------------------
 # Icons: simple 1.6px line drawings, crisp at 20px.
 # --------------------------------------------------------------------------
@@ -161,22 +177,34 @@ def icon(name: str, color: str = "#3c4043") -> QIcon:
 
 
 def app_icon() -> QIcon:
+    """The cell: four selection corners around a highlighter cursor block."""
     result = QIcon()
     for size in (16, 24, 32, 48, 64, 256):
         pix = QPixmap(size, size)
         pix.fill(Qt.transparent)
         p = QPainter(pix)
         p.setRenderHint(QPainter.Antialiasing)
+        f = size / 256
         p.setPen(Qt.NoPen)
-        p.setBrush(ACCENT)
-        p.drawRoundedRect(QRectF(0, 0, size, size), size * 0.2, size * 0.2)
-        pen = QPen(QColor("white"), max(1.5, size * 0.09))
-        pen.setCapStyle(Qt.RoundCap)
-        pen.setJoinStyle(Qt.RoundJoin)
-        p.setPen(pen)
-        f = size / 20
-        p.drawPolyline([QPointF(7.5 * f, 6 * f), QPointF(4 * f, 10 * f), QPointF(7.5 * f, 14 * f)])
-        p.drawPolyline([QPointF(12.5 * f, 6 * f), QPointF(16 * f, 10 * f), QPointF(12.5 * f, 14 * f)])
+        p.setBrush(INK)
+        p.drawRoundedRect(QRectF(0, 0, size, size), 56 * f, 56 * f)
+        if size <= 16:
+            # Corners vanish at this size; the cell alone stays recognizable.
+            p.setBrush(HIGHLIGHT)
+            p.drawRect(QRectF(96 * f, 56 * f, 64 * f, 144 * f))
+        else:
+            pen = QPen(PAPER, (18 if size >= 128 else 22 if size >= 48 else 28) * f)
+            pen.setCapStyle(Qt.SquareCap)
+            pen.setJoinStyle(Qt.MiterJoin)
+            p.setPen(pen)
+            a, b, c, d = (52, 96, 160, 204) if size >= 48 else (52, 100, 156, 204)
+            for pts in ([(a, b), (a, a), (b, a)], [(c, a), (d, a), (d, b)],
+                        [(a, c), (a, d), (b, d)], [(c, d), (d, d), (d, c)]):
+                p.drawPolyline([QPointF(x * f, y * f) for x, y in pts])
+            p.setPen(Qt.NoPen)
+            p.setBrush(HIGHLIGHT)
+            w, h = (40, 88) if size >= 128 else (44, 96) if size >= 48 else (52, 104)
+            p.drawRect(QRectF((128 - w / 2) * f, (128 - h / 2) * f, w * f, h * f))
         p.end()
         result.addPixmap(pix)
     return result

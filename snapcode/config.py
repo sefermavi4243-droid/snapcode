@@ -1,18 +1,27 @@
-"""Persistent user settings stored as JSON under %APPDATA%\\SnapCode."""
+"""Persistent user settings stored as JSON under %APPDATA%\\CodeLift."""
 
 from __future__ import annotations
 
 import json
 import os
+import shutil
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 
-APP_NAME = "SnapCode"
+APP_NAME = "CodeLift"
+# The app was called SnapCode up to 1.4; its data moves over on first start.
+LEGACY_NAME = "SnapCode"
 
 
 def data_dir() -> Path:
-    base = os.environ.get("APPDATA") or str(Path.home() / ".config")
-    path = Path(base) / APP_NAME
+    base = Path(os.environ.get("APPDATA") or str(Path.home() / ".config"))
+    path = base / APP_NAME
+    legacy = base / LEGACY_NAME
+    if not path.exists() and legacy.is_dir():
+        try:
+            legacy.rename(path)
+        except OSError:  # still open by a running SnapCode: copy instead
+            shutil.copytree(legacy, path, dirs_exist_ok=True)
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -31,6 +40,7 @@ class Settings:
     strip_line_numbers: bool = True
     strip_prompts: bool = True
     keep_history: bool = True
+    ui_language: str = "auto"  # auto | tr | en
 
     @classmethod
     def load(cls, path: Path | None = None) -> "Settings":

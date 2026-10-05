@@ -13,6 +13,8 @@ import json
 
 from PIL import Image
 
+from ..i18n import t
+
 
 class ClaudeError(RuntimeError):
     pass
@@ -63,7 +65,7 @@ def recognize(png: bytes, *, model: str, effort: str = "low", api_key: str = "")
     try:
         import anthropic
     except ImportError as exc:
-        raise ClaudeError("Claude motoru için: pip install anthropic") from exc
+        raise ClaudeError(t("Claude motoru için: pip install anthropic")) from exc
 
     data, media_type = _shrink(png)
     client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
@@ -97,29 +99,29 @@ def recognize(png: bytes, *, model: str, effort: str = "low", api_key: str = "")
             ],
         )
     except anthropic.AuthenticationError as exc:
-        raise ClaudeError("Anthropic API anahtarı geçersiz veya eksik.") from exc
+        raise ClaudeError(t("Anthropic API anahtarı geçersiz veya eksik.")) from exc
     except anthropic.PermissionDeniedError as exc:
-        raise ClaudeError(f"Bu anahtarın {model} modeline erişimi yok.") from exc
+        raise ClaudeError(t("Bu anahtarın {model} modeline erişimi yok.", model=model)) from exc
     except anthropic.RateLimitError as exc:
-        raise ClaudeError("Claude hız limitine takıldı, biraz sonra tekrar dene.") from exc
+        raise ClaudeError(t("Claude hız limitine takıldı, biraz sonra tekrar dene.")) from exc
     except anthropic.APIStatusError as exc:
-        raise ClaudeError(f"Claude API hatası {exc.status_code}: {exc.message}") from exc
+        raise ClaudeError(t("Claude API hatası {status}: {message}", status=exc.status_code, message=exc.message)) from exc
     except anthropic.APIConnectionError as exc:
-        raise ClaudeError("Claude API'ye bağlanılamadı (internet?).") from exc
+        raise ClaudeError(t("Claude API'ye bağlanılamadı (internet?).")) from exc
     except anthropic.AnthropicError as exc:
         raise ClaudeError(str(exc)) from exc
     except TypeError as exc:  # raised when no credentials can be resolved
-        raise ClaudeError("Anthropic API anahtarı ayarlanmamış.") from exc
+        raise ClaudeError(t("Anthropic API anahtarı ayarlanmamış.")) from exc
 
     if response.stop_reason == "refusal":
-        raise ClaudeError("Claude bu görüntüyü işlemeyi reddetti.")
+        raise ClaudeError(t("Claude bu görüntüyü işlemeyi reddetti."))
     if response.stop_reason == "max_tokens":
-        raise ClaudeError("Kod çok uzun, yanıt yarıda kesildi.")
+        raise ClaudeError(t("Kod çok uzun, yanıt yarıda kesildi."))
 
     text = next((block.text for block in response.content if block.type == "text"), None)
     if text is None:
-        raise ClaudeError("Claude boş yanıt döndü.")
+        raise ClaudeError(t("Claude boş yanıt döndü."))
     try:
         return json.loads(text)
     except ValueError as exc:
-        raise ClaudeError("Claude yanıtı çözümlenemedi.") from exc
+        raise ClaudeError(t("Claude yanıtı çözümlenemedi.")) from exc

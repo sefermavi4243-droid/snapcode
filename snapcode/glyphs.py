@@ -34,7 +34,7 @@ from .postprocess import OcrLine, OcrWord, estimate_char_width, line_pitch, regr
 FONT_DIR = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
 BUNDLED_DIR = Path(__file__).parent / "fonts"
 # Monospace fonts that ship with Windows, plus open-source coding fonts
-# bundled with SnapCode (OFL / Bitstream Vera licences, see fonts/) for
+# bundled with CodeLift (OFL / Bitstream Vera licences, see fonts/) for
 # screenshots from JetBrains IDEs, macOS (Menlo derives from DejaVu Sans
 # Mono) and tutorials. When the screenshot uses yet another font the closest
 # of these still works, only a little less accurately.

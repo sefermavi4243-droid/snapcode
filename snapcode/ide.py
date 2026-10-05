@@ -1,6 +1,6 @@
 """Find installed editors and open a snippet in one of them.
 
-The snippet is written to Documents\\SnapCode with the right extension, so the
+The snippet is written to Documents\\CodeLift with the right extension, so the
 editor highlights it, its language server picks it up, and the file outlives
 the clipboard.
 """
@@ -16,6 +16,8 @@ from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 
+from .config import APP_NAME
+from .i18n import t
 from .languages import Language
 
 
@@ -110,7 +112,7 @@ def detect() -> tuple[Ide, ...]:
         exe = next((p for p in map(_expand, candidates) if p.is_file()), None)
         if exe:
             ides.append(Ide(key, name, str(exe)))
-    ides.append(Ide("notepad", "Not Defteri", "notepad.exe"))
+    ides.append(Ide("notepad", t("Not Defteri"), "notepad.exe"))
     return tuple(ides)
 
 
@@ -134,7 +136,7 @@ def snippets_dir() -> Path:
         documents = Path(buf.value)
     else:
         documents = Path.home() / "Documents"
-    path = documents / "SnapCode"
+    path = documents / APP_NAME
     path.mkdir(parents=True, exist_ok=True)
     return path
 

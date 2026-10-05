@@ -8,35 +8,28 @@ from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QHBoxLayout, QL
 
 from .. import blocks
 from ..i18n import t
-from .theme import EMBER, HIGHLIGHT, INK, LEAD, icon
+from .theme import CORAL, CREAM, DUSK, LAVENDER, MIST, SAGE, icon
 
-HANDLE = 8
+HANDLE = 6
 MIN_SIZE = 6
-_SHADE = QColor(0, 0, 0, 115)
-# Status cell colours: reading, read, nothing found. The turquoise is
-# darkened a little so it reads on the paper-coloured toolbar.
-STATUS = {"busy": LEAD.name(), "ok": "#1FA597", "error": EMBER.name()}
+# A dusk-purple haze instead of plain black dims everything but the selection.
+_SHADE = QColor(46, 42, 71, 125)
+# Status cell colours: reading, recognized, nothing found.
+STATUS = {"busy": MIST.name(), "ok": SAGE.name(), "error": CORAL.name()}
 
 TOOLBAR_STYLE = """
-QFrame#toolbar { background: #F2F7F7; border: 1px solid rgba(15, 27, 36, 46); border-radius: 6px; }
-QToolButton { border: none; border-radius: 4px; padding: 7px; background: transparent; }
-QToolButton:hover { background: rgba(15, 27, 36, 18); }
-QToolButton:pressed { background: rgba(15, 27, 36, 32); }
-QToolButton#primary { background: #2EC4B6; }
-QToolButton#primary:hover { background: #45D3C6; }
-QToolButton#primary:pressed { background: #25A99C; }
-QLabel#status { color: #0F1B24; font-family: 'JetBrains Mono', 'Cascadia Mono', 'Consolas'; font-size: 8.5pt;
-                padding: 0 8px 0 2px; }
-QLabel#cell { min-width: 6px; max-width: 6px; min-height: 12px; max-height: 12px; margin-left: 6px; }
-QFrame#sep { background: rgba(15, 27, 36, 36); min-width: 1px; max-width: 1px; margin: 7px 3px; }
+QFrame#toolbar { background: #FBF3E8; border: 1px solid #E6D9C7; border-radius: 7px; }
+QToolButton { border: none; border-radius: 5px; padding: 5px; background: transparent; }
+QToolButton:hover { background: #F1E5D4; }
+QToolButton:pressed { background: #E8D9C4; }
+QToolButton#primary { background: #9B8AD9; }
+QToolButton#primary:hover { background: #A999E0; }
+QToolButton#primary:pressed { background: #8C7BCB; }
+QLabel#status { color: #5A5373; font-family: 'Segoe UI'; font-size: 8pt; padding: 0 6px 0 2px; }
+QLabel#cell { min-width: 6px; max-width: 6px; min-height: 12px; max-height: 12px; margin-left: 5px;
+              border-radius: 2px; }
+QFrame#sep { background: #E6D9C7; min-width: 1px; max-width: 1px; margin: 6px 2px; }
 """
-
-
-def _brand_mono(points: float) -> QFont:
-    font = QFont()
-    font.setFamilies(["JetBrains Mono", "Cascadia Mono", "Consolas"])
-    font.setPointSizeF(points)
-    return font
 
 
 def qimage_to_pil(image: QImage):
@@ -128,13 +121,13 @@ class Overlay(QWidget):
         bar.setStyleSheet(TOOLBAR_STYLE)
         bar.setCursor(Qt.ArrowCursor)
         shadow = QGraphicsDropShadowEffect(bar)
-        shadow.setBlurRadius(18)
-        shadow.setOffset(0, 4)
-        shadow.setColor(QColor(0, 0, 0, 90))
+        shadow.setBlurRadius(12)
+        shadow.setOffset(0, 2)
+        shadow.setColor(QColor(0, 0, 0, 60))
         bar.setGraphicsEffect(shadow)
         layout = QHBoxLayout(bar)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(2)
+        layout.setContentsMargins(3, 3, 3, 3)
+        layout.setSpacing(1)
         # Status: a small cursor "cell" in the state colour plus the result.
         self.cell = QLabel(objectName="cell")
         self.info = QLabel("", objectName="status")
@@ -152,8 +145,8 @@ class Overlay(QWidget):
             if name == "close":
                 layout.addWidget(QFrame(objectName="sep"))
             button = QToolButton()
-            # Copy is the one strong button: turquoise with an ink glyph.
-            button.setIcon(icon(glyph, INK.name()))
+            # Copy is the one strong button: lavender with a cream glyph.
+            button.setIcon(icon(glyph, CREAM.name() if name == "copy" else DUSK.name()))
             button.setIconSize(QSize(18, 18))
             button.setToolTip(tip)
             if name == "copy":
@@ -370,21 +363,16 @@ class Overlay(QWidget):
         p.fillPath(shade, _SHADE)
 
         if not self._hover.isNull():
-            # Highlighter dashes over a thin ink line: visible on any screen.
-            box = self._hover.adjusted(0, 0, -1, -1)
-            p.setPen(QPen(INK, 1))
-            p.drawRect(box)
-            p.setPen(QPen(HIGHLIGHT, 1, Qt.DashLine))
-            p.drawRect(box)
+            pen = QPen(LAVENDER, 1, Qt.DashLine)
+            p.setPen(pen)
+            p.drawRect(self._hover.adjusted(0, 0, -1, -1))
 
         if not self._sel.isNull():
+            p.setPen(QPen(LAVENDER, 1))
             p.setBrush(Qt.NoBrush)
-            p.setPen(QPen(INK, 1))
-            p.drawRect(self._sel.adjusted(-2, -2, 1, 1))
-            p.setPen(QPen(HIGHLIGHT, 2))
-            p.drawRect(QRectF(self._sel).adjusted(0, 0, -1, -1).adjusted(-0.5, -0.5, 0.5, 0.5))
-            p.setBrush(HIGHLIGHT)
-            p.setPen(QPen(INK, 1))
+            p.drawRect(self._sel.adjusted(0, 0, -1, -1))
+            p.setBrush(LAVENDER)
+            p.setPen(QPen(CREAM, 1))
             for rect in self._handles().values():
                 p.drawRect(rect)
             phys = self._physical(self._sel)
@@ -392,15 +380,14 @@ class Overlay(QWidget):
         p.end()
 
     def _size_label(self, p: QPainter, text: str) -> None:
-        p.setFont(_brand_mono(8))
-        w = p.fontMetrics().horizontalAdvance(text) + 14
-        y = self._sel.top() - 26 if self._sel.top() >= 26 else self._sel.top() + 4
-        box = QRectF(self._sel.left() - 2, y, w, 20)
-        p.setRenderHint(QPainter.Antialiasing)
+        p.setFont(QFont("Segoe UI", 8))
+        w = p.fontMetrics().horizontalAdvance(text) + 10
+        y = self._sel.top() - 20 if self._sel.top() >= 20 else self._sel.top() + 2
+        box = QRect(self._sel.left(), y, w, 18)
         p.setPen(Qt.NoPen)
-        p.setBrush(INK)
-        p.drawRoundedRect(box, 3, 3)
-        p.setPen(HIGHLIGHT)
+        p.setBrush(DUSK)
+        p.drawRect(box)
+        p.setPen(CREAM)
         p.drawText(box, Qt.AlignCenter, text)
 
 

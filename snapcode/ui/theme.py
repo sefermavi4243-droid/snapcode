@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import QPointF, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import (
-    QColor, QFontDatabase, QGuiApplication, QIcon, QPainter, QPainterPath, QPen, QPixmap,
+    QColor, QFontDatabase, QGuiApplication, QIcon, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap,
     QSyntaxHighlighter, QTextCharFormat,
 )
 from PySide6.QtWidgets import QLabel
@@ -14,14 +14,15 @@ from pygments.util import ClassNotFound
 
 ACCENT = QColor("#1a73e8")
 
-# Brand palette (CodeLift, "Ocean"): deep petrol ink, ice paper, turquoise
-# highlight, amber for "nothing found".
-INK = QColor("#0F1B24")
-PAPER = QColor("#F2F7F7")
-HIGHLIGHT = QColor("#2EC4B6")
-GRAPHITE = QColor("#1C2B36")
-LEAD = QColor("#8A9AA6")
-EMBER = QColor("#FF9F1C")
+# Brand palette (CodeLift, "Lo-fi"): dusk purple, lavender, peach, cream
+# and sage, the soft colours of a late-night study stream.
+DUSK = QColor("#2E2A47")
+LAVENDER = QColor("#9B8AD9")
+PEACH = QColor("#F6B99A")
+CREAM = QColor("#FBF3E8")
+SAGE = QColor("#7FB5A6")
+MIST = QColor("#B8B0C8")
+CORAL = QColor("#F09A7E")
 
 STYLESHEET = """
 QWidget { font-family: 'Segoe UI'; font-size: 9pt; color: #202124; }
@@ -176,6 +177,8 @@ def icon(name: str, color: str = "#3c4043") -> QIcon:
     return result
 
 
+
+
 def app_icon() -> QIcon:
     """The cell: four selection corners around a highlighter cursor block."""
     result = QIcon()
@@ -185,15 +188,19 @@ def app_icon() -> QIcon:
         p = QPainter(pix)
         p.setRenderHint(QPainter.Antialiasing)
         f = size / 256
+        # A sunset tile: peach fading into lavender.
+        sky = QLinearGradient(0, 0, 0, size)
+        sky.setColorAt(0, PEACH)
+        sky.setColorAt(1, LAVENDER)
         p.setPen(Qt.NoPen)
-        p.setBrush(INK)
+        p.setBrush(sky)
         p.drawRoundedRect(QRectF(0, 0, size, size), 56 * f, 56 * f)
         if size <= 16:
             # Corners vanish at this size; the cell alone stays recognizable.
-            p.setBrush(HIGHLIGHT)
+            p.setBrush(DUSK)
             p.drawRect(QRectF(96 * f, 56 * f, 64 * f, 144 * f))
         else:
-            pen = QPen(PAPER, (18 if size >= 128 else 22 if size >= 48 else 28) * f)
+            pen = QPen(CREAM, (18 if size >= 128 else 22 if size >= 48 else 28) * f)
             pen.setCapStyle(Qt.SquareCap)
             pen.setJoinStyle(Qt.MiterJoin)
             p.setPen(pen)
@@ -202,7 +209,7 @@ def app_icon() -> QIcon:
                         [(a, c), (a, d), (b, d)], [(c, d), (d, d), (d, c)]):
                 p.drawPolyline([QPointF(x * f, y * f) for x, y in pts])
             p.setPen(Qt.NoPen)
-            p.setBrush(HIGHLIGHT)
+            p.setBrush(DUSK)
             w, h = (40, 88) if size >= 128 else (44, 96) if size >= 48 else (52, 104)
             p.drawRect(QRectF((128 - w / 2) * f, (128 - h / 2) * f, w * f, h * f))
         p.end()

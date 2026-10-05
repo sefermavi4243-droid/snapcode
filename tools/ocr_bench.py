@@ -84,6 +84,11 @@ GROUP BY id, name
 ORDER BY n DESC;''',
 }
 
+PIL_FONTS = (
+    glyphs.FONT_DIR / "consola.ttf", glyphs.FONT_DIR / "CascadiaMono.ttf", glyphs.FONT_DIR / "lucon.ttf",
+    glyphs.BUNDLED_DIR / "JetBrainsMono-Regular.ttf", glyphs.BUNDLED_DIR / "DejaVuSansMono.ttf",
+)
+QT_FAMILIES = ("Consolas", "Cascadia Mono", "Courier New", "JetBrains Mono", "Fira Code")
 LIGHT, DARK = ((255, 255, 255), (20, 20, 20)), ((30, 30, 30), (212, 212, 212))
 
 
@@ -93,8 +98,8 @@ def _png(image: Image.Image) -> bytes:
     return out.getvalue()
 
 
-def render_pil(code: str, font_file: str, size: int, dark: bool) -> bytes:
-    font = ImageFont.truetype(str(glyphs.FONT_DIR / font_file), size)
+def render_pil(code: str, font_path: Path, size: int, dark: bool) -> bytes:
+    font = ImageFont.truetype(str(font_path), size)
     lines = code.split("\n")
     pitch = round(size * 1.45)
     bg, fg = DARK if dark else LIGHT
@@ -107,8 +112,10 @@ def render_pil(code: str, font_file: str, size: int, dark: bool) -> bytes:
 
 def render_qt(code: str, family: str, px: int, dark: bool, scale: float, jpeg: bool) -> bytes:
     from PySide6.QtCore import QBuffer, QByteArray, QIODevice
-    from PySide6.QtGui import QColor, QFont, QFontMetricsF, QImage, QPainter
+    from PySide6.QtGui import QColor, QFont, QFontDatabase, QFontMetricsF, QImage, QPainter
 
+    for path in glyphs.BUNDLED_DIR.glob("*.ttf"):
+        QFontDatabase.addApplicationFont(str(path))
     font = QFont(family)
     font.setPixelSize(round(px * scale))
     metrics = QFontMetricsF(font)
@@ -139,10 +146,10 @@ def render_qt(code: str, family: str, px: int, dark: bool, scale: float, jpeg: b
 def cases(renderer: str):
     if renderer in ("pil", "both"):
         for name, code in SNIPPETS.items():
-            for font in ("consola.ttf", "CascadiaMono.ttf", "lucon.ttf"):
+            for font in PIL_FONTS:
                 for size in (13, 16):
                     for dark in (False, True):
-                        label = f"pil {name:10} {font:17} {size}px {'dark' if dark else 'light'}"
+                        label = f"pil {name:10} {font.stem:24} {size}px {'dark' if dark else 'light'}"
                         yield label, code, lambda c=code, f=font, s=size, d=dark: render_pil(c, f, s, d)
     if renderer in ("qt", "both"):
         from PySide6.QtWidgets import QApplication
@@ -150,7 +157,7 @@ def cases(renderer: str):
         app = QApplication.instance() or QApplication([])  # noqa: F841 - fonts need an app
         variants = ((13, 1.0, False, False), (14, 1.25, True, False), (15, 1.0, True, True), (12, 1.5, False, True))
         for name, code in SNIPPETS.items():
-            for family in ("Consolas", "Cascadia Mono", "Courier New"):
+            for family in QT_FAMILIES:
                 for px, scale, dark, jpeg in variants:
                     label = (f"qt  {name:10} {family:17} {px}px x{scale} {'dark' if dark else 'light'}"
                              f"{' jpeg' if jpeg else ''}")
@@ -161,21 +168,33 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--renderer", choices=("pil", "qt", "both"), default="both")
     parser.add_argument("--no-repair", action="store_true", help="skip the glyph repair pass")
+    parser.add_argument("--no-structure", action="store_true",
+                        help="skip bracket pairing and identifier unification (snapcode.codefix)")
+    parser.add_argument("--system-fonts-only", action="store_true",
+                        help="match only against fonts that ship with Windows")
     parser.add_argument("-v", "--verbose", action="store_true", help="print every case")
+    parser.add_argument("--dump", help="write every recognized text to this JSON file")
     parser.add_argument("--top", type=int, default=20, help="most common mistakes to list")
     args = parser.parse_args()
 
     if args.no_repair:
         glyphs.repair = lambda lines, gray, report=None: lines
+    if args.no_structure:
+        from snapcode import codefix
+        codefix.balance_brackets = codefix.unify_identifiers = lambda text: (text, 0)
+    if args.system_fonts_only:
+        glyphs.FONTS = tuple(p for p in glyphs.FONTS if p.parent == glyphs.FONT_DIR)
 
     settings = Settings(engine="windows")
     mistakes: collections.Counter = collections.Counter()
     chars = errors = lines_total = lines_ok = 0
     elapsed = []
+    results = {}
     for label, code, render in cases(args.renderer):
         start = time.perf_counter()
         got = pipeline.recognize(render(), settings).code.rstrip("\n")
         elapsed.append(time.perf_counter() - start)
+        results[label] = got
 
         matcher = difflib.SequenceMatcher(None, code, got, autojunk=False)
         err = 0
@@ -190,10 +209,13 @@ def main() -> None:
         lines_total += len(expected)
         lines_ok += ok
         if args.verbose:
-            print(f"{label:58} CER={err / len(code):.3f}  lines={ok}/{len(expected)}")
+            print(f"{label:66} CER={err / len(code):.3f}  lines={ok}/{len(expected)}")
 
     print(f"\n{len(elapsed)} images  CER={errors / chars:.4f}  line accuracy={lines_ok / lines_total:.3f}  "
           f"avg={sum(elapsed) / len(elapsed):.2f}s")
+    if args.dump:
+        import json
+        Path(args.dump).write_text(json.dumps(results, indent=1), encoding="utf-8")
     for (want, got), n in mistakes.most_common(args.top):
         print(f"{n:4}  {want!r} -> {got!r}")
 

@@ -35,5 +35,8 @@ snapcode-gui = "snapcode.app:run_gui"
 [tool.setuptools.packages.find]
 include = ["snapcode*"]
 
+[tool.setuptools.package-data]
+snapcode = ["fonts/*"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -38,6 +38,8 @@ EXCLUDES = [
 a = Analysis(
     [str(Path(SPECPATH) / "launcher.py")],
     pathex=[str(ROOT)],
+    # Glyph templates for the OCR repair pass (snapcode.glyphs).
+    datas=[(str(ROOT / "snapcode" / "fonts"), "snapcode/fonts")],
     hiddenimports=[
         "winrt.windows.media.ocr", "winrt.windows.graphics.imaging",
         "winrt.windows.storage.streams", "winrt.windows.globalization",

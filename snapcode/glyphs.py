@@ -32,9 +32,17 @@ from PIL import Image, ImageDraw, ImageFont
 from .postprocess import OcrLine, OcrWord, estimate_char_width, line_pitch, regroup_rows
 
 FONT_DIR = Path(os.environ.get("WINDIR", r"C:\Windows")) / "Fonts"
-# Monospace fonts that ship with Windows. When the screenshot uses another
-# font the closest of these still works, only a little less accurately.
-FONTS = ("consola.ttf", "CascadiaMono.ttf", "lucon.ttf", "cour.ttf")
+BUNDLED_DIR = Path(__file__).parent / "fonts"
+# Monospace fonts that ship with Windows, plus open-source coding fonts
+# bundled with SnapCode (OFL / Bitstream Vera licences, see fonts/) for
+# screenshots from JetBrains IDEs, macOS (Menlo derives from DejaVu Sans
+# Mono) and tutorials. When the screenshot uses yet another font the closest
+# of these still works, only a little less accurately.
+FONTS = (
+    FONT_DIR / "consola.ttf", FONT_DIR / "CascadiaMono.ttf", FONT_DIR / "lucon.ttf", FONT_DIR / "cour.ttf",
+    BUNDLED_DIR / "JetBrainsMono-Regular.ttf", BUNDLED_DIR / "FiraCode-Regular.ttf",
+    BUNDLED_DIR / "SourceCodePro-Regular.ttf", BUNDLED_DIR / "DejaVuSansMono.ttf",
+)
 CHARS = tuple(chr(c) for c in range(33, 127))
 
 # A cell is accepted when its distance to the best template is below this.
@@ -105,26 +113,26 @@ class _Font:
         return bits
 
 
-@lru_cache(maxsize=64)
-def _font(name: str, size: float) -> _Font:
-    return _Font(FONT_DIR / name, size)
+@lru_cache(maxsize=128)
+def _font(path: Path, size: float) -> _Font:
+    return _Font(path, size)
 
 
 def _candidates(char_width: float) -> list[_Font]:
-    """Every installed font at the sizes whose advance matches the grid."""
+    """Every available font at the sizes whose advance matches the grid."""
     out = []
-    for name in FONTS:
-        if not (FONT_DIR / name).exists():
+    for path in FONTS:
+        if not path.exists():
             continue
-        unit = _font(name, 100).font.getlength("M") / 100
+        unit = _font(path, 100).font.getlength("M") / 100
         exact = char_width / unit
         sizes = {round(exact, 1)}
         # Hinted renderers snap advances to whole pixels, so neighbouring
         # integer sizes are plausible too.
         for size in range(max(6, int(exact * 0.85)), int(exact * 1.15) + 2):
-            if abs(_font(name, size).font.getlength("M") - char_width) < 0.75:
+            if abs(_font(path, size).font.getlength("M") - char_width) < 0.75:
                 sizes.add(size)
-        out += [_font(name, size) for size in sorted(sizes)]
+        out += [_font(path, size) for size in sorted(sizes)]
     return out
 
 

@@ -15,6 +15,8 @@ import statistics
 from dataclasses import dataclass, field
 from typing import Protocol
 
+from . import codefix
+
 
 @dataclass
 class OcrWord:
@@ -55,6 +57,7 @@ class BuildOptions:
     strip_prompts: bool = True
     rebuild_blank_lines: bool = True
     fix_artifacts: bool = True
+    fix_structure: bool = True  # bracket pairing, consistent identifier spelling
     report: list[str] = field(default_factory=list)
 
 
@@ -320,4 +323,11 @@ def build_code(
         if fixed != text:
             options.report.append("typographic characters fixed")
         text = fixed
+    if options.fix_structure:
+        text, n = codefix.balance_brackets(text)
+        if n:
+            options.report.append(f"{n} brackets paired up")
+        text, n = codefix.unify_identifiers(text)
+        if n:
+            options.report.append(f"{n} misspelled names unified")
     return text + "\n"

@@ -14,6 +14,7 @@ Sıradan OCR boşlukları yok sayar; kod için bu ölümcüldür (Python'da giri
 | Satır içi hizalama bozulur | Kelimeler arası boşluk sayısını piksel aralığından çıkarır |
 | Boş satırlar silinir | Satır aralığından boş satırları geri ekler |
 | Alt çizgiler (`__init__`) düşer | Boşluklardaki taban çizgisi piksellerini tarayıp `_` karakterlerini **piksellerden geri okur** |
+| OCR sembolleri atlar (tek başına `}`, `===`, `=>`, `COUNT(*)`) ve benzer karakterleri karıştırır (`l`/`1`/`I`, `0`/`O`, `(`/`C`) | Eş aralıklı ızgarayı ve yazı tipini görüntüden kalibre edip atlanan hücreleri glif şablonlarıyla **piksellerden okur**, benzer karakterleri yeniden doğrular |
 | Editör satır numaraları karışır | Sağa hizalı, ardışık numara sütununu tespit edip siler |
 | `$`, `>>>`, `PS C:\>` istemleri | Terminal ve REPL istemlerini temizler, çıktı satırlarını korur |
 | Bir satır birkaç parçaya bölünür | Kelimeleri dikey konuma göre yeniden satırlara toplar |

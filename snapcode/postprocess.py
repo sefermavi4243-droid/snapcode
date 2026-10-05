@@ -73,7 +73,7 @@ def regroup_rows(lines: list[OcrLine]) -> list[OcrLine]:
     words = [w for line in lines for w in line.words]
     if not words:
         return []
-    tolerance = statistics.median(w.height for w in words) * 0.5
+    tolerance = statistics.median(w.height for w in words) * 0.6
     words.sort(key=lambda w: w.y + w.height / 2)
 
     rows: list[list[OcrWord]] = []

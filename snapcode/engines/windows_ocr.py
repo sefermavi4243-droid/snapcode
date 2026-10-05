@@ -14,11 +14,11 @@ class PixelProbe:
     """Answers "is there ink here?" questions for the post-processor."""
 
     def __init__(self, image: Image.Image) -> None:
-        self._gray = image.convert("L")
-        self._px = self._gray.load()
+        self.gray = image.convert("L")
+        self._px = self.gray.load()
 
     def has_underscore(self, x0: float, x1: float, y0: float, y1: float) -> bool:
-        w, h = self._gray.size
+        w, h = self.gray.size
         xs = range(max(0, int(x0)), min(w, int(x1) + 1))
         if len(xs) < 2:
             return False

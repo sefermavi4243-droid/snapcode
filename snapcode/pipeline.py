@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 
-from . import languages
+from . import glyphs, languages
 from .config import Settings
 from .postprocess import BuildOptions, build_code, fix_artifacts
 
@@ -37,6 +37,7 @@ def _windows(png: bytes, settings: Settings) -> tuple[str, languages.Language, l
         strip_line_numbers=settings.strip_line_numbers,
         strip_prompts=settings.strip_prompts,
     )
+    lines = glyphs.repair(lines, probe.gray, options.report)
     code = build_code(lines, options, probe)
     return code, languages.detect(code), options.report
 

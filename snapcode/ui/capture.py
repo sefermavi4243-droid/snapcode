@@ -19,20 +19,20 @@ STATUS = {"busy": MIST.name(), "ok": SAGE.name(), "error": CORAL.name()}
 
 TOOLBAR_STYLE = """
 QFrame#toolbar { background: #FBF3E8; border: 1px solid #E6D9C7; border-radius: 7px; }
-QToolButton { border: none; border-radius: 5px; padding: 5px; background: transparent; }
+QToolButton { border: none; border-radius: 5px; padding: 4px; background: transparent; }
 QToolButton:hover { background: #F1E5D4; }
 QToolButton:pressed { background: #E8D9C4; }
 QToolButton#primary { background: #9B8AD9; }
 QToolButton#primary:hover { background: #A999E0; }
 QToolButton#primary:pressed { background: #8C7BCB; }
 QToolButton#pill {
-    padding: 5px 8px 5px 6px; color: #5A5373; font-family: 'Segoe UI'; font-weight: 600; font-size: 8pt;
+    padding: 4px 6px 4px 5px; color: #5A5373; font-family: 'Segoe UI'; font-weight: 600; font-size: 8pt;
 }
 QToolButton#pill:hover { color: #2E2A47; }
 QLabel#status { color: #5A5373; font-family: 'Segoe UI'; font-size: 8pt; padding: 0 6px 0 2px; }
-QLabel#cell { min-width: 6px; max-width: 6px; min-height: 12px; max-height: 12px; margin-left: 5px;
+QLabel#cell { min-width: 6px; max-width: 6px; min-height: 11px; max-height: 11px; margin-left: 5px;
               border-radius: 2px; }
-QFrame#sep { background: #E6D9C7; min-width: 1px; max-width: 1px; margin: 6px 2px; }
+QFrame#sep { background: #E6D9C7; min-width: 1px; max-width: 1px; margin: 5px 2px; }
 """
 
 
@@ -42,7 +42,7 @@ def fit_pill(button: QToolButton) -> None:
     font.setPointSizeF(8)  # matches QToolButton#pill in TOOLBAR_STYLE
     font.setBold(True)
     text = QFontMetrics(font).horizontalAdvance(button.text())
-    button.setFixedWidth(text + button.iconSize().width() + 18)
+    button.setFixedWidth(text + button.iconSize().width() + 15)
 
 
 def qimage_to_pil(image: QImage):
@@ -139,8 +139,8 @@ class Overlay(QWidget):
         shadow.setColor(QColor(0, 0, 0, 60))
         bar.setGraphicsEffect(shadow)
         layout = QHBoxLayout(bar)
-        layout.setContentsMargins(4, 4, 4, 4)
-        layout.setSpacing(3)
+        layout.setContentsMargins(3, 3, 3, 3)
+        layout.setSpacing(2)
         # Status: a small cursor "cell" in the state colour plus the result.
         self.cell = QLabel(objectName="cell")
         self.info = QLabel("", objectName="status")
@@ -160,7 +160,7 @@ class Overlay(QWidget):
             button = QToolButton()
             # Copy is the one strong button: lavender with a cream glyph.
             button.setIcon(icon(glyph, CREAM.name() if name == "copy" else DUSK.name()))
-            button.setIconSize(QSize(18, 18))
+            button.setIconSize(QSize(14, 14))
             button.setToolTip(tip)
             if name == "copy":
                 button.setObjectName("primary")
@@ -168,8 +168,8 @@ class Overlay(QWidget):
                 # The two ways to keep working on the code get words, not
                 # just icons: "PyCharm", "Düzenle".
                 button.setObjectName("pill")
-                button.setIconSize(QSize(16, 16))
-                button.setFixedHeight(28)  # same height as the icon buttons
+                button.setIconSize(QSize(13, 13))
+                button.setFixedHeight(22)  # same height as the icon buttons
                 button.setText(t("IDE") if name == "ide" else t("Düzenle"))
                 button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
                 fit_pill(button)

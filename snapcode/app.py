@@ -143,7 +143,7 @@ class CodeLiftApp(QObject):
         if self._session:
             return
         self._jobs.clear()
-        session = CaptureSession(self._last_region, self.settings.ocr_language)
+        session = CaptureSession(self._last_region)
         session.settled.connect(self._settled)
         session.action.connect(self._action)
         session.finished.connect(self._session_closed)

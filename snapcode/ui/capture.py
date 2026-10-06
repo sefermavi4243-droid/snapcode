@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import QObject, QPoint, QRect, QRectF, QRunnable, QSize, Qt, QThreadPool, QTimer, Signal
+from PySide6.QtCore import QObject, QPoint, QRect, QRectF, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QGuiApplication, QImage, QPainter, QPainterPath, QPen
 from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QHBoxLayout, QLabel, QToolButton, QWidget
 
-from .. import blocks
 from ..i18n import t
 from .theme import ACCENT, CORAL, CREAM, DUSK, MIST, SAGE, icon
 
@@ -45,43 +44,6 @@ def fit_pill(button: QToolButton) -> None:
     button.setFixedWidth(text + button.iconSize().width() + 15)
 
 
-def qimage_to_pil(image: QImage):
-    from PIL import Image
-
-    image = image.convertToFormat(QImage.Format_RGBA8888)
-    return Image.frombuffer(
-        "RGBA", (image.width(), image.height()), bytes(image.constBits()), "raw", "RGBA",
-        image.bytesPerLine(), 1,
-    )
-
-
-_RUNNING: set = set()  # keeps scan tasks alive if their overlay closes first
-
-
-class _ScanSignals(QObject):
-    done = Signal(list)
-
-
-class _ScanTask(QRunnable):
-    """OCRs the whole frozen screen once so hovering can outline text blocks."""
-
-    def __init__(self, image: QImage, language: str) -> None:
-        super().__init__()
-        self.image, self.language = image, language
-        self.signals = _ScanSignals()
-
-    def run(self) -> None:
-        try:
-            from ..engines import windows_ocr
-
-            lines = windows_ocr.scan(qimage_to_pil(self.image), self.language)
-            found = blocks.find_blocks(lines)
-        except Exception:
-            found = []
-        self.signals.done.emit(found)
-        _RUNNING.discard(self)
-
-
 class Overlay(QWidget):
     """One per screen. Emits physical-pixel crops; never does OCR itself."""
 
@@ -89,7 +51,7 @@ class Overlay(QWidget):
     action = Signal(str, QImage, QRect)  # copy | edit | save | image
     cancelled = Signal()
 
-    def __init__(self, screen, last_rect: QRect | None, language: str) -> None:
+    def __init__(self, screen, last_rect: QRect | None) -> None:
         super().__init__(None, Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.Tool)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setMouseTracking(True)
@@ -97,8 +59,6 @@ class Overlay(QWidget):
         self._image = screen.grabWindow(0).toImage()
         self._ratio = self._image.width() / max(1, screen.geometry().width())
         self._sel = QRect()
-        self._hover = QRect()
-        self._blocks: list[QRect] = []
         self._last = last_rect
         self._drag_mode: str | None = None  # draw | move | handle name
         self._press = QPoint()
@@ -109,24 +69,10 @@ class Overlay(QWidget):
         self.setGeometry(screen.geometry())
         self._build_toolbar()
 
-        self._scan = _ScanTask(self._image, language)
-        self._scan.setAutoDelete(False)
-        self._scan.signals.done.connect(self._blocks_ready)
-        _RUNNING.add(self._scan)
-        QThreadPool.globalInstance().start(self._scan)
-
     # -- coordinates -------------------------------------------------------
     def _physical(self, rect: QRect) -> QRect:
         r = self._ratio
         return QRect(round(rect.x() * r), round(rect.y() * r), round(rect.width() * r), round(rect.height() * r))
-
-    def _logical(self, x0: float, y0: float, x1: float, y1: float) -> QRect:
-        r = self._ratio
-        return QRect(QPoint(round(x0 / r), round(y0 / r)), QPoint(round(x1 / r), round(y1 / r))).intersected(self.rect())
-
-    def _blocks_ready(self, rects: list) -> None:
-        self._blocks = [self._logical(*r) for r in rects]
-        self._update_hover(self.mapFromGlobal(QCursor.pos()))
 
     # -- toolbar -----------------------------------------------------------
     def _build_toolbar(self) -> None:
@@ -212,7 +158,6 @@ class Overlay(QWidget):
 
     def _set_selection(self, rect: QRect) -> None:
         self._sel = rect.normalized().intersected(self.rect())
-        self._hover = QRect()
         self.set_info("")
         self._place_toolbar()
         self.update()
@@ -244,15 +189,6 @@ class Overlay(QWidget):
                 return name
         return "move" if self._sel.contains(pos) else None
 
-    def _update_hover(self, pos: QPoint) -> None:
-        if not self._sel.isNull() or self._drag_mode:
-            return
-        hits = [b for b in self._blocks if b.contains(pos)]
-        hover = min(hits, key=lambda b: b.width() * b.height(), default=QRect())
-        if hover != self._hover:
-            self._hover = hover
-            self.update()
-
     # -- mouse -------------------------------------------------------------
     def mousePressEvent(self, event) -> None:
         if event.button() == Qt.RightButton:
@@ -276,7 +212,6 @@ class Overlay(QWidget):
                        "bl": Qt.SizeBDiagCursor, "tc": Qt.SizeVerCursor, "bc": Qt.SizeVerCursor,
                        "ml": Qt.SizeHorCursor, "mr": Qt.SizeHorCursor, "move": Qt.SizeAllCursor}
             self.setCursor(cursors.get(hit, Qt.CrossCursor))
-            self._update_hover(pos)
             return
         if mode == "draw":
             self._sel = QRect(self._press, pos).normalized()
@@ -306,12 +241,8 @@ class Overlay(QWidget):
         pos = event.position().toPoint()
         tiny = (pos - self._press).manhattanLength() < 4
         if mode == "draw" and tiny:
-            # A click selects the outlined block under the cursor.
-            if not self._hover.isNull():
-                self._set_selection(self._hover)
-            else:
-                self._sel = QRect()
-                self.update()
+            self._sel = QRect()
+            self.update()
             return
         if mode == "move" and tiny:
             self._place_toolbar()
@@ -384,11 +315,6 @@ class Overlay(QWidget):
             shade = shade.subtracted(hole)
         p.fillPath(shade, _SHADE)
 
-        if not self._hover.isNull():
-            pen = QPen(ACCENT, 1, Qt.DashLine)
-            p.setPen(pen)
-            p.drawRect(self._hover.adjusted(0, 0, -1, -1))
-
         if not self._sel.isNull():
             p.setPen(QPen(ACCENT, 1))
             p.setBrush(Qt.NoBrush)
@@ -420,10 +346,9 @@ class CaptureSession(QObject):
     action = Signal(str, QImage, QRect)
     finished = Signal()
 
-    def __init__(self, last: tuple[str, QRect] | None, language: str) -> None:
+    def __init__(self, last: tuple[str, QRect] | None) -> None:
         super().__init__()
         self._last = last
-        self._language = language
         self.overlays: list[Overlay] = []
         self.last_selection: tuple[str, QRect] | None = None
         self._closed = False
@@ -431,7 +356,7 @@ class CaptureSession(QObject):
     def start(self) -> None:
         for screen in QGuiApplication.screens():
             last = self._last[1] if self._last and self._last[0] == screen.name() else None
-            overlay = Overlay(screen, last, self._language)
+            overlay = Overlay(screen, last)
             overlay.settled.connect(lambda img, rect, o=overlay: self._settled(o, img, rect))
             overlay.action.connect(lambda name, img, rect, o=overlay: self._action(o, name, img, rect))
             overlay.cancelled.connect(self.close)

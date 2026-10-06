@@ -5,7 +5,7 @@ from __future__ import annotations
 from PySide6.QtCore import QPointF, QRect, QRectF, Qt, QTimer
 from PySide6.QtGui import (
     QColor, QFontDatabase, QGuiApplication, QIcon, QLinearGradient, QPainter, QPainterPath, QPen, QPixmap,
-    QSyntaxHighlighter, QTextCharFormat,
+    QRadialGradient, QSyntaxHighlighter, QTextCharFormat,
 )
 from PySide6.QtWidgets import QLabel
 from pygments.lexers import get_lexer_by_name
@@ -218,8 +218,28 @@ def icon(name: str, color: str = "#3c4043") -> QIcon:
 
 
 
+def _leaf(p: QPainter, f: float, x: float, y: float) -> None:
+    """A mint leaf with a light vein, growing up and to the right from (x, y)."""
+    p.save()
+    p.translate(x * f, y * f)
+    p.rotate(-26)
+    p.scale(f, f)
+    path = QPainterPath(QPointF(0, 0))
+    path.cubicTo(QPointF(14, -26), QPointF(48, -30), QPointF(70, -14))
+    path.cubicTo(QPointF(50, 8), QPointF(18, 10), QPointF(0, 0))
+    shade = QLinearGradient(0, -20, 60, 0)
+    shade.setColorAt(0, MINT)
+    shade.setColorAt(1, QColor("#3E9A7E"))
+    p.setPen(Qt.NoPen)
+    p.setBrush(shade)
+    p.drawPath(path)
+    p.setPen(QPen(QColor(255, 255, 255, 90), 3))
+    p.drawLine(QPointF(6, -2), QPointF(56, -14))
+    p.restore()
+
+
 def app_icon() -> QIcon:
-    """The fruit: code brackets on a tangerine tile, a leaf where it was plucked."""
+    """The fruit itself: a glossy tangerine with code brackets, stem and leaf."""
     result = QIcon()
     for size in (16, 24, 32, 48, 64, 256):
         pix = QPixmap(size, size)
@@ -231,33 +251,34 @@ def app_icon() -> QIcon:
         def pt(x, y):
             return QPointF(x * f, y * f)
 
-        skin = QLinearGradient(0, 0, 0, size)
-        skin.setColorAt(0, APRICOT)
-        skin.setColorAt(1, TANGERINE)
+        # Small sizes drop the stem and leaf and let the fruit fill the square.
+        small = size <= 24
+        cx, cy, r = (128, 128, 120) if small else (128, 152, 98)
+        skin = QRadialGradient(pt(cx - r * 0.35, cy - r * 0.4), r * 1.5 * f)
+        skin.setColorAt(0, QColor("#FFA36C"))
+        skin.setColorAt(0.55, TANGERINE)
+        skin.setColorAt(1, QColor("#E4511F"))
         p.setPen(Qt.NoPen)
         p.setBrush(skin)
-        p.drawRoundedRect(QRectF(0, 0, size, size), 60 * f, 60 * f)
-        # Small sizes drop the leaf and thicken the brackets so they stay legible.
-        small = size <= 24
-        pen = QPen(PAPER, (32 if small else 26 if size < 64 else 22) * f)
+        p.drawEllipse(pt(cx, cy), r * f, r * 0.94 * f)
+        if not small:
+            stem = QPen(INK, 11 * f)
+            stem.setCapStyle(Qt.RoundCap)
+            p.setPen(stem)
+            p.setBrush(Qt.NoBrush)
+            path = QPainterPath(pt(128, 64))
+            path.quadTo(pt(125, 44), pt(116, 30))
+            p.drawPath(path)
+            _leaf(p, f, 128, 52)
+        pen = QPen(PAPER, (30 if small else 20) * f)
         pen.setCapStyle(Qt.RoundCap)
         pen.setJoinStyle(Qt.RoundJoin)
         p.setPen(pen)
-        top, mid, bottom = (60, 128, 196) if small else (104, 150, 196)
-        inner, outer = (100, 44) if small else (108, 52)
-        p.drawPolyline([pt(inner, top), pt(outer, mid), pt(inner, bottom)])
-        p.drawPolyline([pt(256 - inner, top), pt(256 - outer, mid), pt(256 - inner, bottom)])
-        if not small:
-            stem = QPen(INK, 12 * f)
-            stem.setCapStyle(Qt.RoundCap)
-            p.setPen(stem)
-            p.drawLine(pt(128, 92), pt(128, 54))
-            leaf = QPainterPath(pt(128, 62))
-            leaf.cubicTo(pt(142, 30), pt(178, 26), pt(196, 40))
-            leaf.cubicTo(pt(178, 68), pt(146, 74), pt(128, 62))
-            p.setPen(Qt.NoPen)
-            p.setBrush(MINT)
-            p.drawPath(leaf)
+        p.setBrush(Qt.NoBrush)
+        y = 128 if small else 156
+        gap, w, h = (14, 36, 44) if small else (20, 30, 34)
+        p.drawPolyline([pt(128 - gap, y - h), pt(128 - gap - w, y), pt(128 - gap, y + h)])
+        p.drawPolyline([pt(128 + gap, y - h), pt(128 + gap + w, y), pt(128 + gap, y + h)])
         p.end()
         result.addPixmap(pix)
     return result

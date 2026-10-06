@@ -12,78 +12,77 @@ from pygments.lexers import get_lexer_by_name
 from pygments.token import Comment, Keyword, Name, Number, String, Token
 from pygments.util import ClassNotFound
 
-ACCENT = QColor("#1a73e8")
-
-# Brand palette (CodeLift, "Lo-fi"): dusk purple, lavender, peach, cream
-# and sage, the soft colours of a late-night study stream.
-DUSK = QColor("#2E2A47")
-LAVENDER = QColor("#9B8AD9")
-PEACH = QColor("#F6B99A")
-CREAM = QColor("#FBF3E8")
-SAGE = QColor("#7FB5A6")
-MIST = QColor("#B8B0C8")
-CORAL = QColor("#F09A7E")
+# Brand palette (Pluck, "Ink & Tangerine"): a ripe tangerine accent on warm
+# paper, ink for text, mint for success.
+INK = QColor("#1E2230")
+TANGERINE = QColor("#FF6B35")
+APRICOT = QColor("#FFB38A")
+PAPER = QColor("#FFF8F3")
+MINT = QColor("#5BB89A")
+SLATE = QColor("#A9AEBB")
+CORAL = QColor("#E5534B")
+ACCENT = TANGERINE
 
 STYLESHEET = """
-QWidget { font-family: 'Segoe UI'; font-size: 9pt; color: #2E2A47; }
-QDialog, QMainWindow, QWidget#root { background: #FBF7F1; }
+QWidget { font-family: 'Segoe UI'; font-size: 9pt; color: #1E2230; }
+QDialog, QMainWindow, QWidget#root { background: #F8F6F3; }
 QPlainTextEdit {
-    background: #FFFCF8; border: none; padding: 12px;
+    background: #FFFDFB; border: none; padding: 12px;
     font-family: 'Cascadia Mono', 'Consolas'; font-size: 10.5pt;
-    selection-background-color: #E2D9F3; selection-color: #2E2A47;
+    selection-background-color: #FFD9C7; selection-color: #1E2230;
 }
-QListWidget { border: none; border-right: 1px solid #EADFCF; background: #F6EFE4; outline: none; }
+QListWidget { border: none; border-right: 1px solid #E6E1DA; background: #F2EFEB; outline: none; }
 QListWidget::item { padding: 8px 10px; border-radius: 6px; margin: 2px 6px; }
-QListWidget::item:hover { background: #F0E6D8; }
-QListWidget::item:selected { background: #E9E1F7; color: #2E2A47; }
+QListWidget::item:hover { background: #EEEAE4; }
+QListWidget::item:selected { background: #FFE6DA; color: #1E2230; }
 QLineEdit, QComboBox {
-    border: 1px solid #E3D6C4; border-radius: 6px; padding: 4px 8px; background: #FFFCF8;
+    border: 1px solid #DED8CF; border-radius: 6px; padding: 4px 8px; background: #FFFDFB;
 }
-QLineEdit:focus, QComboBox:focus { border-color: #9B8AD9; }
+QLineEdit:focus, QComboBox:focus { border-color: #FF6B35; }
 QComboBox::drop-down { border: none; width: 22px; }
 QComboBox::down-arrow { image: url(@CHEVRON@); width: 10px; height: 10px; }
 QComboBox QAbstractItemView {
-    background: #FFFCF8; border: 1px solid #E3D6C4; selection-background-color: #EFE9F8;
-    selection-color: #2E2A47; outline: none;
+    background: #FFFDFB; border: 1px solid #DED8CF; selection-background-color: #FFEDE4;
+    selection-color: #1E2230; outline: none;
 }
 QPushButton {
-    background: #FFFCF8; border: 1px solid #E3D6C4; border-radius: 6px; padding: 5px 14px;
+    background: #FFFDFB; border: 1px solid #DED8CF; border-radius: 6px; padding: 5px 14px;
 }
-QPushButton:hover { background: #F3EADF; }
-QPushButton:pressed { background: #EADFCF; }
+QPushButton:hover { background: #EFEBE6; }
+QPushButton:pressed { background: #E6E1DA; }
 QToolButton {
-    background: #FFFCF8; border: 1px solid #E3D6C4; border-radius: 6px; padding: 5px 12px;
+    background: #FFFDFB; border: 1px solid #DED8CF; border-radius: 6px; padding: 5px 12px;
 }
-QToolButton:hover { background: #F3EADF; }
+QToolButton:hover { background: #EFEBE6; }
 QToolButton[popupMode="1"] { padding-right: 26px; }
-QToolButton::menu-button { border: none; border-left: 1px solid #E3D6C4; width: 22px; }
+QToolButton::menu-button { border: none; border-left: 1px solid #DED8CF; width: 22px; }
 QToolButton::menu-arrow { image: url(@CHEVRON@); width: 10px; height: 10px; }
-QPushButton#primary { background: #9B8AD9; border-color: #9B8AD9; color: #FFFFFF; font-weight: 600; }
-QPushButton#primary:hover { background: #8C7BCB; border-color: #8C7BCB; }
-QPushButton#primary:pressed { background: #7E6DBE; }
-QWidget#bar { background: #F6EFE4; border-top: 1px solid #EADFCF; }
-QLabel#muted { color: #8A829C; }
-QMenu { background: #FFFCF8; border: 1px solid #E3D6C4; border-radius: 8px; padding: 6px; }
+QPushButton#primary { background: #FF6B35; border-color: #FF6B35; color: #FFFFFF; font-weight: 600; }
+QPushButton#primary:hover { background: #EE5A24; border-color: #EE5A24; }
+QPushButton#primary:pressed { background: #D94E1C; }
+QWidget#bar { background: #F2EFEB; border-top: 1px solid #E6E1DA; }
+QLabel#muted { color: #7C8294; }
+QMenu { background: #FFFDFB; border: 1px solid #DED8CF; border-radius: 8px; padding: 6px; }
 QMenu::item { padding: 6px 24px 6px 16px; border-radius: 5px; }
-QMenu::item:selected { background: #EFE9F8; color: #2E2A47; }
-QMenu::separator { height: 1px; background: #EADFCF; margin: 5px 8px; }
-QToolTip { background: #2E2A47; color: #FBF3E8; border: none; padding: 5px 8px; }
+QMenu::item:selected { background: #FFEDE4; color: #1E2230; }
+QMenu::separator { height: 1px; background: #E6E1DA; margin: 5px 8px; }
+QToolTip { background: #1E2230; color: #FFF8F3; border: none; padding: 5px 8px; }
 """
 
-# Lo-fi light palette: berry keywords, lavender functions, sage strings,
-# peach numbers and dusty comments, all readable on cream.
+# Light palette: berry keywords, tangerine functions, green strings, plum
+# numbers and slate comments, all readable on paper.
 _PALETTE = {
-    Keyword: ("#B5507E", False),
-    Name.Function: ("#6E5BC4", False),
-    Name.Class: ("#A0603A", False),
+    Keyword: ("#B23A6E", False),
+    Name.Function: ("#C2531E", False),
+    Name.Class: ("#8A5A16", False),
     Name.Builtin: ("#3F7FA8", False),
-    Name.Decorator: ("#6E5BC4", False),
+    Name.Decorator: ("#C2531E", False),
     Name.Tag: ("#4E8A6F", False),
     Name.Attribute: ("#3F7FA8", False),
-    Name.Exception: ("#A0603A", False),
+    Name.Exception: ("#8A5A16", False),
     String: ("#4E8A6F", False),
-    Number: ("#C2703D", False),
-    Comment: ("#A79FB8", True),
+    Number: ("#8E5CB8", False),
+    Comment: ("#9AA0AE", True),
 }
 
 
@@ -140,7 +139,7 @@ def stylesheet() -> str:
     pix.fill(Qt.transparent)
     p = QPainter(pix)
     p.setRenderHint(QPainter.Antialiasing)
-    pen = QPen(DUSK, 4.5)
+    pen = QPen(INK, 4.5)
     pen.setCapStyle(Qt.RoundCap)
     pen.setJoinStyle(Qt.RoundJoin)
     p.setPen(pen)
@@ -220,7 +219,7 @@ def icon(name: str, color: str = "#3c4043") -> QIcon:
 
 
 def app_icon() -> QIcon:
-    """The cell: four selection corners around a highlighter cursor block."""
+    """The fruit: code brackets on a tangerine tile, a leaf where it was plucked."""
     result = QIcon()
     for size in (16, 24, 32, 48, 64, 256):
         pix = QPixmap(size, size)
@@ -228,30 +227,37 @@ def app_icon() -> QIcon:
         p = QPainter(pix)
         p.setRenderHint(QPainter.Antialiasing)
         f = size / 256
-        # A sunset tile: peach fading into lavender.
-        sky = QLinearGradient(0, 0, 0, size)
-        sky.setColorAt(0, PEACH)
-        sky.setColorAt(1, LAVENDER)
+
+        def pt(x, y):
+            return QPointF(x * f, y * f)
+
+        skin = QLinearGradient(0, 0, 0, size)
+        skin.setColorAt(0, APRICOT)
+        skin.setColorAt(1, TANGERINE)
         p.setPen(Qt.NoPen)
-        p.setBrush(sky)
-        p.drawRoundedRect(QRectF(0, 0, size, size), 56 * f, 56 * f)
-        if size <= 16:
-            # Corners vanish at this size; the cell alone stays recognizable.
-            p.setBrush(DUSK)
-            p.drawRect(QRectF(96 * f, 56 * f, 64 * f, 144 * f))
-        else:
-            pen = QPen(CREAM, (18 if size >= 128 else 22 if size >= 48 else 28) * f)
-            pen.setCapStyle(Qt.SquareCap)
-            pen.setJoinStyle(Qt.MiterJoin)
-            p.setPen(pen)
-            a, b, c, d = (52, 96, 160, 204) if size >= 48 else (52, 100, 156, 204)
-            for pts in ([(a, b), (a, a), (b, a)], [(c, a), (d, a), (d, b)],
-                        [(a, c), (a, d), (b, d)], [(c, d), (d, d), (d, c)]):
-                p.drawPolyline([QPointF(x * f, y * f) for x, y in pts])
+        p.setBrush(skin)
+        p.drawRoundedRect(QRectF(0, 0, size, size), 60 * f, 60 * f)
+        # Small sizes drop the leaf and thicken the brackets so they stay legible.
+        small = size <= 24
+        pen = QPen(PAPER, (32 if small else 26 if size < 64 else 22) * f)
+        pen.setCapStyle(Qt.RoundCap)
+        pen.setJoinStyle(Qt.RoundJoin)
+        p.setPen(pen)
+        top, mid, bottom = (60, 128, 196) if small else (104, 150, 196)
+        inner, outer = (100, 44) if small else (108, 52)
+        p.drawPolyline([pt(inner, top), pt(outer, mid), pt(inner, bottom)])
+        p.drawPolyline([pt(256 - inner, top), pt(256 - outer, mid), pt(256 - inner, bottom)])
+        if not small:
+            stem = QPen(INK, 12 * f)
+            stem.setCapStyle(Qt.RoundCap)
+            p.setPen(stem)
+            p.drawLine(pt(128, 92), pt(128, 54))
+            leaf = QPainterPath(pt(128, 62))
+            leaf.cubicTo(pt(142, 30), pt(178, 26), pt(196, 40))
+            leaf.cubicTo(pt(178, 68), pt(146, 74), pt(128, 62))
             p.setPen(Qt.NoPen)
-            p.setBrush(DUSK)
-            w, h = (40, 88) if size >= 128 else (44, 96) if size >= 48 else (52, 104)
-            p.drawRect(QRectF((128 - w / 2) * f, (128 - h / 2) * f, w * f, h * f))
+            p.setBrush(MINT)
+            p.drawPath(leaf)
         p.end()
         result.addPixmap(pix)
     return result
@@ -274,7 +280,7 @@ class Toast(QLabel):
         self.setAttribute(Qt.WA_ShowWithoutActivating)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setStyleSheet(
-            "background: #2E2A47; color: #FBF3E8; border-radius: 8px; padding: 10px 16px;"
+            "background: #1E2230; color: #FFF8F3; border-radius: 8px; padding: 10px 16px;"
             "font-family: 'Segoe UI'; font-size: 9pt;"
         )
 

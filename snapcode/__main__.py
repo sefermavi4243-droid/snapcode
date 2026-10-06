@@ -38,7 +38,7 @@ def _copy(text: str) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     set_language(Settings.load().ui_language)
-    parser = argparse.ArgumentParser(prog="codelift", description=t("Ekran görüntüsündeki kodu metne çevir."))
+    parser = argparse.ArgumentParser(prog="pluck", description=t("Ekran görüntüsündeki kodu metne çevir."))
     parser.add_argument("image", nargs="?", help=t("görüntü dosyası (yoksa tepsi uygulaması başlar)"))
     parser.add_argument("--clipboard", action="store_true", help=t("panodaki görüntüyü kullan"))
     parser.add_argument("--engine", choices=["auto", "windows", "claude"], help=t("tanıma motoru"))
@@ -46,7 +46,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--ide", nargs="?", const="auto", metavar="IDE",
                         help=t("sonucu IDE'de aç (vscode, cursor, pycharm, …; boşsa otomatik)"))
     parser.add_argument("--json", action="store_true", help=t("JSON çıktı (dil, motor, süre)"))
-    parser.add_argument("--version", action="version", version=f"codelift {__version__}")
+    parser.add_argument("--version", action="version", version=f"pluck {__version__}")
     args = parser.parse_args(argv)
 
     if not args.image and not args.clipboard:
@@ -65,7 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         result = recognize(png, Settings.load(), args.engine)
     except RuntimeError as exc:  # ClaudeError, WindowsOcrUnavailable
-        print(f"codelift: {exc}", file=sys.stderr)
+        print(f"pluck: {exc}", file=sys.stderr)
         return 1
     if args.copy:
         _copy(result.code)

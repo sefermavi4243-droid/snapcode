@@ -18,27 +18,27 @@ from .. import ide, languages
 from ..config import APP_NAME
 from ..i18n import t
 from ..pipeline import Recognition
-from .theme import CREAM, DUSK, CodeHighlighter, Toast, app_icon, icon
+from .theme import PAPER, INK, CodeHighlighter, Toast, app_icon, icon
 
 EDITOR_STYLE = """
-QWidget#header { background: #FBF7F1; border-bottom: 1px solid #EADFCF; }
-QLabel#meta { color: #8A829C; font-size: 8.5pt; }
+QWidget#header { background: #F8F6F3; border-bottom: 1px solid #E6E1DA; }
+QLabel#meta { color: #7C8294; font-size: 8.5pt; }
 QComboBox#chip {
-    background: #EFE9F8; border: 1px solid #E2D9F3; border-radius: 11px; padding: 2px 10px;
+    background: #FFEDE4; border: 1px solid #FFD9C7; border-radius: 11px; padding: 2px 10px;
     font-family: 'Segoe UI'; font-weight: 600; font-size: 8.5pt; min-height: 18px;
 }
-QComboBox#chip:hover { background: #E5DCF5; }
+QComboBox#chip:hover { background: #FFE2D4; }
 QToolButton#toggle {
-    background: transparent; border: 1px solid #E3D6C4; border-radius: 11px; padding: 2px 10px 2px 7px;
-    font-size: 8.5pt; color: #5A5373;
+    background: transparent; border: 1px solid #DED8CF; border-radius: 11px; padding: 2px 10px 2px 7px;
+    font-size: 8.5pt; color: #4A5063;
 }
-QToolButton#toggle:hover { background: #F3EADF; }
-QToolButton#toggle:checked { background: #EFE9F8; border-color: #D6CAEE; color: #2E2A47; }
-QScrollArea#shot { background: #2E2A47; border: none; }
-QScrollArea#shot > QWidget > QWidget { background: #2E2A47; }
-QSplitter::handle { background: #EADFCF; }
-QSplitter::handle:hover { background: #9B8AD9; }
-QLabel#hint { color: #A79FB8; font-size: 8pt; }
+QToolButton#toggle:hover { background: #EFEBE6; }
+QToolButton#toggle:checked { background: #FFEDE4; border-color: #FFC9AE; color: #1E2230; }
+QScrollArea#shot { background: #1E2230; border: none; }
+QScrollArea#shot > QWidget > QWidget { background: #1E2230; }
+QSplitter::handle { background: #E6E1DA; }
+QSplitter::handle:hover { background: #FF6B35; }
+QLabel#hint { color: #9AA0AE; font-size: 8pt; }
 """
 
 
@@ -100,7 +100,7 @@ class CodeView(QPlainTextEdit):
 
     def paint_gutter(self, event) -> None:
         p = QPainter(self.gutter)
-        p.fillRect(event.rect(), QColor("#F6EFE4"))
+        p.fillRect(event.rect(), QColor("#F2EFEB"))
         p.setFont(self.font())
         current = self.textCursor().blockNumber()
         block = self.firstVisibleBlock()
@@ -111,7 +111,7 @@ class CodeView(QPlainTextEdit):
                 break
             if block.isVisible():
                 n = block.blockNumber()
-                p.setPen(QColor("#6E5BC4") if n == current else QColor("#B9AFC9"))
+                p.setPen(QColor("#C2531E") if n == current else QColor("#B3B8C4"))
                 p.drawText(QRect(0, round(geometry.top()), self.gutter.width() - 12, round(geometry.height())),
                            Qt.AlignRight | Qt.AlignVCenter, str(n + 1))
             block = block.next()
@@ -119,7 +119,7 @@ class CodeView(QPlainTextEdit):
 
     def _highlight_line(self) -> None:
         line = QTextEdit.ExtraSelection()
-        line.format.setBackground(QColor("#F3EEFB"))
+        line.format.setBackground(QColor("#FFF3EC"))
         line.format.setProperty(QTextFormat.FullWidthSelection, True)
         line.cursor = self.textCursor()
         line.cursor.clearSelection()
@@ -181,7 +181,7 @@ class EditorWindow(QWidget):
             self.shot.setAlignment(Qt.AlignCenter)
             toggle = QToolButton(objectName="toggle", checkable=True, checked=True)
             toggle.setText(t("Görüntü"))
-            toggle.setIcon(icon("image", DUSK.name()))
+            toggle.setIcon(icon("image", INK.name()))
             toggle.setIconSize(QSize(14, 14))
             toggle.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
             toggle.setCursor(Qt.PointingHandCursor)
@@ -204,9 +204,9 @@ class EditorWindow(QWidget):
         row.setSpacing(8)
         row.addWidget(QLabel(t("Ctrl+Enter kopyala · Ctrl+S kaydet · Esc kapat"), objectName="hint"))
         row.addStretch()
-        save = QPushButton(icon("save", DUSK.name()), t("Kaydet"))
+        save = QPushButton(icon("save", INK.name()), t("Kaydet"))
         save.clicked.connect(self.save)
-        copy = QPushButton(icon("code", CREAM.name()), t("Kopyala"), objectName="primary")
+        copy = QPushButton(icon("code", PAPER.name()), t("Kopyala"), objectName="primary")
         copy.setDefault(True)
         copy.clicked.connect(self.copy_and_close)
         row.addWidget(save)
@@ -240,7 +240,7 @@ class EditorWindow(QWidget):
         """Click: default IDE. Arrow: pick any detected editor."""
         button = QToolButton()
         button.setText(t("IDE'de aç"))
-        button.setIcon(icon("ide", DUSK.name()))
+        button.setIcon(icon("ide", INK.name()))
         button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         button.setPopupMode(QToolButton.MenuButtonPopup)
         button.clicked.connect(lambda: self.send(None))

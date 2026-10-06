@@ -15,11 +15,11 @@ VSVersionInfo(
   kids=[
     StringFileInfo([StringTable('041f04b0', [
       StringStruct('CompanyName', 'Sefer Mavi'),
-      StringStruct('FileDescription', 'CodeLift'),
+      StringStruct('FileDescription', 'Pluck'),
       StringStruct('FileVersion', '{VERSION}'),
-      StringStruct('InternalName', 'CodeLift'),
-      StringStruct('OriginalFilename', 'CodeLift.exe'),
-      StringStruct('ProductName', 'CodeLift'),
+      StringStruct('InternalName', 'Pluck'),
+      StringStruct('OriginalFilename', 'Pluck.exe'),
+      StringStruct('ProductName', 'Pluck'),
       StringStruct('ProductVersion', '{VERSION}'),
       StringStruct('LegalCopyright', 'MIT License')])]),
     VarFileInfo([VarStruct('Translation', [1055, 1200])])
@@ -27,7 +27,7 @@ VSVersionInfo(
 )
 """, encoding="utf-8")
 
-# Qt modules CodeLift never touches; dropping them roughly halves the size.
+# Qt modules Pluck never touches; dropping them roughly halves the size.
 EXCLUDES = [
     "tkinter", "unittest", "pydoc", "numpy", "PySide6.QtNetwork", "PySide6.QtQml", "PySide6.QtQuick",
     "PySide6.QtWebEngineCore", "PySide6.QtWebEngineWidgets", "PySide6.QtMultimedia",
@@ -64,10 +64,10 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="CodeLift",
+    name="Pluck",
     icon=str(Path(SPECPATH) / "snapcode.ico"),
     version=str(version_file),
     console=False,
     upx=False,
 )
-coll = COLLECT(exe, a.binaries, a.datas, name="CodeLift", upx=False)
+coll = COLLECT(exe, a.binaries, a.datas, name="Pluck", upx=False)

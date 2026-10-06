@@ -1,6 +1,6 @@
 """Find installed editors and open a snippet in one of them.
 
-The snippet is written to Documents\\CodeLift with the right extension, so the
+The snippet is written to Documents\\Pluck with the right extension, so the
 editor highlights it, its language server picks it up, and the file outlives
 the clipboard.
 """

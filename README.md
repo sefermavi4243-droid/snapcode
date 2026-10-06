@@ -1,14 +1,17 @@
-# CodeLift
+<p align="center"><img src="assets/pluck.png" width="96" alt="Pluck"></p>
 
-**Ekrandaki herhangi bir kodu yakala, saniyeler içinde gerçek, kopyalanabilir metin olarak al.**
+<h1 align="center">Pluck</h1>
 
-YouTube videosu, toplantıda paylaşılan ekran, PDF, uzak masaüstü, bir resim içindeki kod… Kopyalanamayan her kodu `Ctrl+Shift+X` ile seç; CodeLift kodu tanır, **girintisini geri kurar**, dilini bulur ve panoya koyar.
+<p align="center"><b>Kodu ekrandan kopar.</b><br>
+Ekrandaki herhangi bir kodu seç, saniyeler içinde gerçek, kopyalanabilir metin olarak al.</p>
+
+YouTube videosu, toplantıda paylaşılan ekran, PDF, uzak masaüstü, bir resim içindeki kod… Kopyalanamayan her kodu `Ctrl+Shift+X` ile seç; Pluck kodu tanır, **girintisini geri kurar**, dilini bulur ve panoya koyar.
 
 ## Neden sıradan OCR'dan farklı?
 
-Sıradan OCR boşlukları yok sayar; kod için bu ölümcüldür (Python'da girinti = anlam). CodeLift, kod ekranlarının neredeyse her zaman **eş aralıklı (monospace) yazı tipiyle** çizildiğini kullanır. Her kelimenin piksel konumunu karakter ızgarasına geri çevirir ve şunları yeniden kurar:
+Sıradan OCR boşlukları yok sayar; kod için bu ölümcüldür (Python'da girinti = anlam). Pluck, kod ekranlarının neredeyse her zaman **eş aralıklı (monospace) yazı tipiyle** çizildiğini kullanır. Her kelimenin piksel konumunu karakter ızgarasına geri çevirir ve şunları yeniden kurar:
 
-| Sorun | CodeLift ne yapar |
+| Sorun | Pluck ne yapar |
 |---|---|
 | Girintiler kaybolur | Kelime konumlarından sütun hesaplar, girinti birimini (2/3/4) tespit edip hizalar |
 | Satır içi hizalama bozulur | Kelimeler arası boşluk sayısını piksel aralığından çıkarır |
@@ -29,7 +32,7 @@ Lightshot kadar basit: kısayola bas, seç, `Ctrl+C`.
 - **Tek tıkla blok seçimi** - imleci bir kod bloğunun üstüne getir, blok kesikli çerçeveyle belirir; tıkla, seçilsin. Sürüklemene gerek yok
 - **Bekleme yok** - fareyi bıraktığın anda tanıma arka planda başlar; `Ctrl+C`'ye bastığında kod çoğu zaman hazırdır. Seçim ekranı ~80 ms'de açılır
 - **Seçimin yanında küçük araç çubuğu** - kodu kopyala, düzenle, dosyaya kaydet (dile göre doğru uzantıyla), görüntüyü kopyala. Çubukta tespit edilen dil ve satır sayısı görünür
-- **IDE'ye gönder** - kodu dile uygun uzantıyla `Belgeler\CodeLift` içine kaydedip doğrudan IDE'de açar (kod panoya da kopyalanır). VS Code, Cursor, Windsurf, tüm JetBrains IDE'leri (PyCharm, IntelliJ, WebStorm, Rider, GoLand, CLion, …), Android Studio, Sublime Text ve Notepad++ otomatik bulunur. **Otomatik** modda dile göre en uygun IDE seçilir: Python için PyCharm, Java için IntelliJ, yoksa VS Code
+- **IDE'ye gönder** - kodu dile uygun uzantıyla `Belgeler\Pluck` içine kaydedip doğrudan IDE'de açar (kod panoya da kopyalanır). VS Code, Cursor, Windsurf, tüm JetBrains IDE'leri (PyCharm, IntelliJ, WebStorm, Rider, GoLand, CLion, …), Android Studio, Sublime Text ve Notepad++ otomatik bulunur. **Otomatik** modda dile göre en uygun IDE seçilir: Python için PyCharm, Java için IntelliJ, yoksa VS Code
 - **Son alanı tekrar seç** - `Space`. Video izlerken her sahnede aynı alanı yakalamak için
 - **Çift tık** - kopyala ve kapat
 - **İnce ayar** - ok tuşlarıyla seçimi 1 piksel kaydır, `Shift`+ok ile boyutlandır; köşe ve kenar tutamakları, sürükleyerek taşıma
@@ -39,7 +42,7 @@ Lightshot kadar basit: kısayola bas, seç, `Ctrl+C`.
 - **20+ dil tespiti**, sözdizimi renklendirmeli düzenleyici, aranabilir geçmiş, komut satırı
 - **Türkçe ve İngilizce arayüz** - Ayarlar → Arayüz dili; Otomatik seçenek Windows'un diline uyar
 
-> 1.4 ve öncesinin adı **SnapCode** idi. Yeni sürümü kurmak eskisini günceller; ayarlar, geçmiş ve "Windows ile başlat" kendiliğinden taşınır.
+> Pluck daha önce **CodeLift** (1.5) ve **SnapCode** (1.4 ve öncesi) adını taşıyordu. Yeni sürümü kurmak eskisini günceller; ayarlar, geçmiş ve "Windows ile başlat" kendiliğinden taşınır.
 
 ### Seçim ekranı kısayolları
 
@@ -57,7 +60,7 @@ Lightshot kadar basit: kısayola bas, seç, `Ctrl+C`.
 
 ## İndir
 
-**[CodeLift-Setup.exe - son sürüm](https://github.com/sefermavi4243-droid/snapcode/releases/latest)**
+**[Pluck-Setup.exe - son sürüm](https://github.com/sefermavi4243-droid/snapcode/releases/latest)**
 
 Yönetici izni istemez, yaklaşık 35 MB. Kurulumda "Windows ile başlat" seçilebilir. Güncellemek için yeni sürümü kurman yeterli; ayarlar ve geçmiş korunur. Gereksinim: Windows 10/11 (64 bit).
 
@@ -71,7 +74,7 @@ Gereksinim: Python 3.10+
 git clone https://github.com/sefermavi4243-droid/snapcode.git
 cd snapcode
 pip install -e .
-codelift
+pluck
 ```
 
 Windows OCR için en az bir OCR dil paketi gerekir (İngilizce genelde yüklüdür). Kontrol:
@@ -85,7 +88,7 @@ winget install JRSoftware.InnoSetup
 powershell -ExecutionPolicy Bypass -File packaging\build.ps1
 ```
 
-Çıktı: `build\installer\CodeLift-Setup-<sürüm>.exe`. Betik, paketlenmiş `.exe` içinde OCR'ın çalıştığını kendi kendine test eder. `v*` etiketi gönderildiğinde GitHub Actions aynı derlemeyi yapıp kurulum dosyasını Releases'e yükler.
+Çıktı: `build\installer\Pluck-Setup-<sürüm>.exe`. Betik, paketlenmiş `.exe` içinde OCR'ın çalıştığını kendi kendine test eder. `v*` etiketi gönderildiğinde GitHub Actions aynı derlemeyi yapıp kurulum dosyasını Releases'e yükler.
 
 ### Claude Vision motoru (isteğe bağlı)
 
@@ -102,12 +105,12 @@ ya da anahtarı tepsi menüsü → **Ayarlar** içinden girin. Anahtar tanımlı
 ### Komut satırı
 
 ```powershell
-codelift ekran.png                      # kodu stdout'a yazar
-codelift ekran.png --engine claude      # belirli motor
-codelift --clipboard --copy             # panodaki görüntüyü çöz, kodu panoya geri koy
-codelift ekran.png --json               # dil, motor, süre ve notlarla JSON
-codelift ekran.png --ide                # IDE'de aç (otomatik seçim)
-codelift ekran.png --ide pycharm        # belirli IDE'de aç
+pluck ekran.png                      # kodu stdout'a yazar
+pluck ekran.png --engine claude      # belirli motor
+pluck --clipboard --copy             # panodaki görüntüyü çöz, kodu panoya geri koy
+pluck ekran.png --json               # dil, motor, süre ve notlarla JSON
+pluck ekran.png --ide                # IDE'de aç (otomatik seçim)
+pluck ekran.png --ide pycharm        # belirli IDE'de aç
 ```
 
 ## Mimari

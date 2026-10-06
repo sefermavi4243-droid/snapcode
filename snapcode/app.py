@@ -72,7 +72,7 @@ class Job:
             self.waiters.append(callback)
 
 
-class CodeLiftApp(QObject):
+class PluckApp(QObject):
     def __init__(self, app: QApplication) -> None:
         super().__init__()
         self.app = app
@@ -358,5 +358,5 @@ def run_gui() -> int:
         QMessageBox.critical(None, APP_NAME, t("Sistem tepsisi bulunamadı."))
         return 1
 
-    controller = CodeLiftApp(app)  # noqa: F841 - keeps the tray alive
+    controller = PluckApp(app)  # noqa: F841 - keeps the tray alive
     return app.exec()

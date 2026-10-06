@@ -4,10 +4,11 @@
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif
-#define AppName "CodeLift"
-#define AppExe "CodeLift.exe"
-; Up to 1.4 the app was SnapCode; the same AppId upgrades it in place.
+#define AppName "Pluck"
+#define AppExe "Pluck.exe"
+; Up to 1.4 the app was SnapCode, in 1.5 CodeLift; the same AppId upgrades it in place.
 #define LegacyName "SnapCode"
+#define LegacyName2 "CodeLift"
 
 [Setup]
 AppId={{6F1C5B8E-2D4A-4F7B-9C3E-8A1D2B7E4C90}
@@ -24,7 +25,7 @@ DisableProgramGroupPage=yes
 DisableDirPage=auto
 PrivilegesRequired=lowest
 OutputDir=..\build\installer
-OutputBaseFilename=CodeLift-Setup-{#AppVersion}
+OutputBaseFilename=Pluck-Setup-{#AppVersion}
 SetupIconFile=snapcode.ico
 UninstallDisplayIcon={app}\{#AppExe}
 UninstallDisplayName={#AppName}
@@ -42,17 +43,17 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [CustomMessages]
-turkish.AutoStart=Windows açıldığında CodeLift'i başlat
-english.AutoStart=Start CodeLift when Windows starts
-turkish.Launch=CodeLift'i şimdi başlat
-english.Launch=Launch CodeLift now
+turkish.AutoStart=Windows açıldığında Pluck'i başlat
+english.AutoStart=Start Pluck when Windows starts
+turkish.Launch=Pluck'i şimdi başlat
+english.Launch=Launch Pluck now
 
 [Tasks]
 Name: "autostart"; Description: "{cm:AutoStart}"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "..\build\dist\CodeLift\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\build\dist\Pluck\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
@@ -77,12 +78,12 @@ Type: filesandordirs; Name: "{app}"
 [Code]
 // A tray app has no window to close politely, so stop it before files are
 // replaced (upgrade) or removed (uninstall). Settings and history live in
-// %APPDATA%\CodeLift (moved from %APPDATA%\SnapCode on first start) and are kept.
+// %APPDATA%\Pluck (moved from %APPDATA%\CodeLift or SnapCode on first start) and are kept.
 procedure StopApp();
 var
   Code: Integer;
 begin
-  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#AppExe} /IM {#LegacyName}.exe', '', SW_HIDE, ewWaitUntilTerminated, Code);
+  Exec(ExpandConstant('{sys}\taskkill.exe'), '/F /IM {#AppExe} /IM {#LegacyName}.exe /IM {#LegacyName2}.exe', '', SW_HIDE, ewWaitUntilTerminated, Code);
   Sleep(300);
 end;
 

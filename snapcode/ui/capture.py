@@ -7,31 +7,31 @@ from PySide6.QtGui import QColor, QCursor, QFont, QFontMetrics, QGuiApplication,
 from PySide6.QtWidgets import QFrame, QGraphicsDropShadowEffect, QHBoxLayout, QLabel, QToolButton, QWidget
 
 from ..i18n import t
-from .theme import ACCENT, CORAL, CREAM, DUSK, MIST, SAGE, icon
+from .theme import ACCENT, CORAL, PAPER, INK, SLATE, MINT, icon
 
 HANDLE = 6
 MIN_SIZE = 6
-# The screen itself stays neutral; only the toolbar wears the lo-fi colours.
+# The screen itself stays neutral; only the toolbar wears the brand colours.
 _SHADE = QColor(0, 0, 0, 110)
 # Status cell colours: reading, recognized, nothing found.
-STATUS = {"busy": MIST.name(), "ok": SAGE.name(), "error": CORAL.name()}
+STATUS = {"busy": SLATE.name(), "ok": MINT.name(), "error": CORAL.name()}
 
 TOOLBAR_STYLE = """
-QFrame#toolbar { background: #FBF3E8; border: 1px solid #E6D9C7; border-radius: 7px; }
+QFrame#toolbar { background: #FFF8F3; border: 1px solid #E2DCD4; border-radius: 7px; }
 QToolButton { border: none; border-radius: 5px; padding: 4px; background: transparent; }
-QToolButton:hover { background: #F1E5D4; }
-QToolButton:pressed { background: #E8D9C4; }
-QToolButton#primary { background: #9B8AD9; }
-QToolButton#primary:hover { background: #A999E0; }
-QToolButton#primary:pressed { background: #8C7BCB; }
+QToolButton:hover { background: #EEE9E3; }
+QToolButton:pressed { background: #E4DED6; }
+QToolButton#primary { background: #FF6B35; }
+QToolButton#primary:hover { background: #FF8152; }
+QToolButton#primary:pressed { background: #EE5A24; }
 QToolButton#pill {
-    padding: 4px 6px 4px 5px; color: #5A5373; font-family: 'Segoe UI'; font-weight: 600; font-size: 8pt;
+    padding: 4px 6px 4px 5px; color: #4A5063; font-family: 'Segoe UI'; font-weight: 600; font-size: 8pt;
 }
-QToolButton#pill:hover { color: #2E2A47; }
-QLabel#status { color: #5A5373; font-family: 'Segoe UI'; font-size: 8pt; padding: 0 6px 0 2px; }
+QToolButton#pill:hover { color: #1E2230; }
+QLabel#status { color: #4A5063; font-family: 'Segoe UI'; font-size: 8pt; padding: 0 6px 0 2px; }
 QLabel#cell { min-width: 6px; max-width: 6px; min-height: 11px; max-height: 11px; margin-left: 5px;
               border-radius: 2px; }
-QFrame#sep { background: #E6D9C7; min-width: 1px; max-width: 1px; margin: 5px 2px; }
+QFrame#sep { background: #E2DCD4; min-width: 1px; max-width: 1px; margin: 5px 2px; }
 """
 
 
@@ -104,8 +104,8 @@ class Overlay(QWidget):
             if name == "close":
                 layout.addWidget(QFrame(objectName="sep"))
             button = QToolButton()
-            # Copy is the one strong button: lavender with a cream glyph.
-            button.setIcon(icon(glyph, CREAM.name() if name == "copy" else DUSK.name()))
+            # Copy is the one strong button: tangerine with a paper glyph.
+            button.setIcon(icon(glyph, PAPER.name() if name == "copy" else INK.name()))
             button.setIconSize(QSize(14, 14))
             button.setToolTip(tip)
             if name == "copy":

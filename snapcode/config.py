@@ -1,4 +1,4 @@
-"""Persistent user settings stored as JSON under %APPDATA%\\CodeLift."""
+"""Persistent user settings stored as JSON under %APPDATA%\\Pluck."""
 
 from __future__ import annotations
 
@@ -8,19 +8,20 @@ import shutil
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
 
-APP_NAME = "CodeLift"
-# The app was called SnapCode up to 1.4; its data moves over on first start.
-LEGACY_NAME = "SnapCode"
+APP_NAME = "Pluck"
+# Earlier names, newest first: CodeLift (1.5), SnapCode (up to 1.4). Their
+# data moves over on first start.
+LEGACY_NAMES = ("CodeLift", "SnapCode")
 
 
 def data_dir() -> Path:
     base = Path(os.environ.get("APPDATA") or str(Path.home() / ".config"))
     path = base / APP_NAME
-    legacy = base / LEGACY_NAME
-    if not path.exists() and legacy.is_dir():
+    legacy = next((base / name for name in LEGACY_NAMES if (base / name).is_dir()), None)
+    if not path.exists() and legacy is not None:
         try:
             legacy.rename(path)
-        except OSError:  # still open by a running SnapCode: copy instead
+        except OSError:  # still open by a running older version: copy instead
             shutil.copytree(legacy, path, dirs_exist_ok=True)
     path.mkdir(parents=True, exist_ok=True)
     return path

@@ -115,7 +115,6 @@ codelift ekran.png --ide pycharm        # belirli IDE'de aç
 ```
 snapcode/
 ├── app.py              tepsi uygulaması, erken tanıma, pano izleme
-├── blocks.py           ekrandaki metin bloklarını bulma (tek tıkla seçim)
 ├── hotkey.py           Win32 global kısayol dinleyicisi
 ├── pipeline.py         görüntü → kod (Qt'den bağımsız; CLI ve testler kullanır)
 ├── postprocess.py      geometri tabanlı kod yeniden kurma

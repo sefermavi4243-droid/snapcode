@@ -172,8 +172,3 @@ async def _recognize(
 def recognize(png: bytes, language_tag: str = "en-US") -> tuple[list[OcrLine], PixelProbe]:
     """Return OCR rows in source-image pixels plus a probe into those pixels."""
     return asyncio.run(_recognize(Image.open(io.BytesIO(png)), language_tag, upscale=True))
-
-
-def scan(image: Image.Image, language_tag: str = "en-US") -> list[OcrLine]:
-    """Fast, no-upscale pass over a whole screen; used to locate text blocks."""
-    return asyncio.run(_recognize(image, language_tag, upscale=False))[0]

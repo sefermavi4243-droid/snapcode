@@ -26,11 +26,9 @@ QToolButton#primary { background: #9B8AD9; }
 QToolButton#primary:hover { background: #A999E0; }
 QToolButton#primary:pressed { background: #8C7BCB; }
 QToolButton#pill {
-    background: #EFE9F8; border: 1px solid #E2D9F3; border-radius: 5px; padding: 2px 7px 2px 5px;
-    color: #2E2A47; font-family: 'Segoe UI'; font-weight: 600; font-size: 8pt;
+    padding: 5px 8px 5px 6px; color: #5A5373; font-family: 'Segoe UI'; font-weight: 600; font-size: 8pt;
 }
-QToolButton#pill:hover { background: #E5DCF5; border-color: #D6CAEE; }
-QToolButton#pill:pressed { background: #DCD0F1; }
+QToolButton#pill:hover { color: #2E2A47; }
 QLabel#status { color: #5A5373; font-family: 'Segoe UI'; font-size: 8pt; padding: 0 6px 0 2px; }
 QLabel#cell { min-width: 6px; max-width: 6px; min-height: 12px; max-height: 12px; margin-left: 5px;
               border-radius: 2px; }
@@ -44,7 +42,7 @@ def fit_pill(button: QToolButton) -> None:
     font.setPointSizeF(8)  # matches QToolButton#pill in TOOLBAR_STYLE
     font.setBold(True)
     text = QFontMetrics(font).horizontalAdvance(button.text())
-    button.setFixedWidth(text + button.iconSize().width() + 20)
+    button.setFixedWidth(text + button.iconSize().width() + 18)
 
 
 def qimage_to_pil(image: QImage):
@@ -170,7 +168,8 @@ class Overlay(QWidget):
                 # The two ways to keep working on the code get words, not
                 # just icons: "PyCharm", "Düzenle".
                 button.setObjectName("pill")
-                button.setIconSize(QSize(14, 14))
+                button.setIconSize(QSize(16, 16))
+                button.setFixedHeight(28)  # same height as the icon buttons
                 button.setText(t("IDE") if name == "ide" else t("Düzenle"))
                 button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
                 fit_pill(button)

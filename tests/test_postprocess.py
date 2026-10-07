@@ -1,4 +1,4 @@
-from snapcode.postprocess import (
+from pluck.postprocess import (
     BuildOptions, OcrLine, OcrWord, build_code, detect_indent_unit, fix_artifacts, strip_prompts,
 )
 
@@ -93,8 +93,8 @@ def test_python_repl_prompts():
 
 
 def test_shell_prompts():
-    lines, removed = strip_prompts(["$ pip install snapcode", "Successfully installed"])
-    assert removed and lines[0] == "pip install snapcode"
+    lines, removed = strip_prompts(["$ pip install pluck", "Successfully installed"])
+    assert removed and lines[0] == "pip install pluck"
 
 
 def test_comment_is_not_a_prompt():

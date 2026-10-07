@@ -5,14 +5,14 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 Set-Location $root
 
-$version = (Select-String -Path "snapcode\__init__.py" -Pattern '__version__ = "(.+)"').Matches[0].Groups[1].Value
+$version = (Select-String -Path "pluck\__init__.py" -Pattern '__version__ = "(.+)"').Matches[0].Groups[1].Value
 Write-Host "Pluck $version"
 
 python packaging\make_icon.py
 if ($LASTEXITCODE) { throw "icon failed" }
 
 if (Test-Path build\dist) { Remove-Item -Recurse -Force build\dist }
-python -m PyInstaller packaging\snapcode.spec --noconfirm --distpath build\dist --workpath build\work
+python -m PyInstaller packaging\pluck.spec --noconfirm --distpath build\dist --workpath build\work
 if ($LASTEXITCODE) { throw "PyInstaller failed" }
 
 # Prove the frozen exe can still reach Windows OCR before shipping it.

@@ -1,8 +1,8 @@
 """Entry point.
 
-    snapcode                      start the tray app
-    snapcode shot.png             print the code found in an image
-    snapcode --clipboard --copy   read the clipboard image, put the code back
+    pluck                      start the tray app
+    pluck shot.png             print the code found in an image
+    pluck --clipboard --copy   read the clipboard image, put the code back
 """
 
 from __future__ import annotations

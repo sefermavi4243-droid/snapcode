@@ -14,7 +14,7 @@ def command() -> str:
     if getattr(sys, "frozen", False):
         return f'"{sys.executable}"'
     pythonw = Path(sys.executable).with_name("pythonw.exe")
-    return f'"{pythonw if pythonw.exists() else sys.executable}" -m snapcode'
+    return f'"{pythonw if pythonw.exists() else sys.executable}" -m pluck'
 
 
 def is_enabled() -> bool:

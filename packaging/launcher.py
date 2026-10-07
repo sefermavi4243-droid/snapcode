@@ -11,8 +11,8 @@ def selftest(out_path: str) -> int:
 
     from PIL import Image, ImageDraw, ImageFont
 
-    from snapcode.config import Settings
-    from snapcode.pipeline import recognize
+    from pluck.config import Settings
+    from pluck.pipeline import recognize
 
     code = "def add(a, b):\n    return a + b"
     font = ImageFont.truetype("consola.ttf", 16)
@@ -34,6 +34,6 @@ def selftest(out_path: str) -> int:
 if __name__ == "__main__":
     if len(sys.argv) == 3 and sys.argv[1] == "--selftest":
         raise SystemExit(selftest(sys.argv[2]))
-    from snapcode.app import run_gui
+    from pluck.app import run_gui
 
     raise SystemExit(run_gui())

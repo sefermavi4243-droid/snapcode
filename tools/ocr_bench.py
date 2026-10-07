@@ -6,7 +6,7 @@ error rate (CER), exact-line accuracy and the most common mistakes.
 
     python tools/ocr_bench.py                 # PIL and Qt renderings
     python tools/ocr_bench.py --renderer qt -v
-    python tools/ocr_bench.py --no-repair     # baseline without snapcode.glyphs
+    python tools/ocr_bench.py --no-repair     # baseline without pluck.glyphs
     python tools/ocr_bench.py --fixtures DIR  # real screenshots: name.png + name.txt
 
 PIL renders like the glyph templates do, so it flatters the repair pass; the
@@ -27,8 +27,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from snapcode import glyphs, pipeline  # noqa: E402
-from snapcode.config import Settings  # noqa: E402
+from pluck import glyphs, pipeline  # noqa: E402
+from pluck.config import Settings  # noqa: E402
 
 SNIPPETS = {
     "python": '''class Node:
@@ -180,7 +180,7 @@ def main() -> None:
     parser.add_argument("--fixtures", type=Path, help="score real screenshots in this folder instead")
     parser.add_argument("--no-repair", action="store_true", help="skip the glyph repair pass")
     parser.add_argument("--no-structure", action="store_true",
-                        help="skip bracket pairing and identifier unification (snapcode.codefix)")
+                        help="skip bracket pairing and identifier unification (pluck.codefix)")
     parser.add_argument("--system-fonts-only", action="store_true",
                         help="match only against fonts that ship with Windows")
     parser.add_argument("-v", "--verbose", action="store_true", help="print every case")
@@ -191,7 +191,7 @@ def main() -> None:
     if args.no_repair:
         glyphs.repair = lambda lines, gray, report=None: lines
     if args.no_structure:
-        from snapcode import codefix
+        from pluck import codefix
         codefix.balance_brackets = codefix.unify_identifiers = lambda text: (text, 0)
     if args.system_fonts_only:
         glyphs.FONTS = tuple(p for p in glyphs.FONTS if p.parent == glyphs.FONT_DIR)

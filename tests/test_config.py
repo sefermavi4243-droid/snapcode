@@ -1,6 +1,6 @@
 import pytest
 
-from snapcode import config
+from pluck import config
 
 
 @pytest.mark.parametrize("legacy_name", config.LEGACY_NAMES)

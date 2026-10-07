@@ -1,9 +1,9 @@
 import ast
 from pathlib import Path
 
-from snapcode import i18n
+from pluck import i18n
 
-SOURCE = Path(__file__).resolve().parents[1] / "snapcode"
+SOURCE = Path(__file__).resolve().parents[1] / "pluck"
 
 
 def _translated_literals():
@@ -20,7 +20,7 @@ def test_every_string_has_an_english_version():
 
 
 def test_dynamic_strings_have_english_versions():
-    from snapcode import languages, pipeline
+    from pluck import languages, pipeline
 
     for text in [*pipeline.ENGINES.values(), *i18n.LANGUAGES.values(), languages.by_key("text").name]:
         assert text in i18n.EN or text in ("Türkçe", "English"), text

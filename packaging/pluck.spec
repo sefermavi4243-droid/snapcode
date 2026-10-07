@@ -1,11 +1,11 @@
 # PyInstaller spec: one-folder build (starts much faster than one-file).
-# Build with: python -m PyInstaller packaging/snapcode.spec --noconfirm
+# Build with: python -m PyInstaller packaging/pluck.spec --noconfirm
 
 import re
 from pathlib import Path
 
 ROOT = Path(SPECPATH).parent
-VERSION = re.search(r'__version__ = "([^"]+)"', (ROOT / "snapcode" / "__init__.py").read_text()).group(1)
+VERSION = re.search(r'__version__ = "([^"]+)"', (ROOT / "pluck" / "__init__.py").read_text()).group(1)
 NUMS = tuple(int(x) for x in VERSION.split(".")) + (0,)
 
 version_file = Path(SPECPATH) / "version_info.txt"
@@ -38,8 +38,8 @@ EXCLUDES = [
 a = Analysis(
     [str(Path(SPECPATH) / "launcher.py")],
     pathex=[str(ROOT)],
-    # Glyph templates for the OCR repair pass (snapcode.glyphs).
-    datas=[(str(ROOT / "snapcode" / "fonts"), "snapcode/fonts")],
+    # Glyph templates for the OCR repair pass (pluck.glyphs).
+    datas=[(str(ROOT / "pluck" / "fonts"), "pluck/fonts")],
     hiddenimports=[
         "winrt.windows.media.ocr", "winrt.windows.graphics.imaging",
         "winrt.windows.storage.streams", "winrt.windows.globalization",
@@ -65,7 +65,7 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name="Pluck",
-    icon=str(Path(SPECPATH) / "snapcode.ico"),
+    icon=str(Path(SPECPATH) / "pluck.ico"),
     version=str(version_file),
     console=False,
     upx=False,

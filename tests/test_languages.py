@@ -1,6 +1,6 @@
 import pytest
 
-from snapcode import languages
+from pluck import languages
 
 CASES = {
     "python": "import os\n\ndef main():\n    print(os.getcwd())\n\nif __name__ == '__main__':\n    main()\n",
@@ -13,7 +13,7 @@ CASES = {
     "rust": "fn main() {\n    let mut v = Vec::new();\n    v.push(1);\n    println!(\"{:?}\", v);\n}\n",
     "sql": "SELECT name, COUNT(*) FROM users\nWHERE active = 1\nGROUP BY name;\n",
     "bash": "#!/bin/bash\nfor f in *.txt; do\n  echo \"$f\"\ndone\n",
-    "json": '{"name": "snapcode", "version": 1}',
+    "json": '{"name": "pluck", "version": 1}',
     "html": "<!DOCTYPE html>\n<html><body><div class=\"a\">hi</div></body></html>\n",
     "powershell": "Get-ChildItem -Path . | Where-Object { $_.Length -gt 1kb }\n",
 }

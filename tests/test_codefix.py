@@ -1,4 +1,4 @@
-from snapcode.codefix import balance_brackets, fix_tokens, unify_identifiers
+from pluck.codefix import balance_brackets, fix_tokens, unify_identifiers
 
 
 def test_lone_closing_line_follows_its_block():

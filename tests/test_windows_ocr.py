@@ -36,12 +36,12 @@ def render(code: str, dark: bool, numbers: bool) -> bytes:
 @pytest.mark.parametrize("dark,numbers", [(False, False), (True, True)])
 def test_round_trip(dark, numbers):
     pytest.importorskip("winrt.windows.media.ocr")
-    from snapcode.engines.windows_ocr import available_languages
+    from pluck.engines.windows_ocr import available_languages
 
     if not available_languages():
         pytest.skip("no Windows OCR language pack installed (e.g. Windows Server)")
-    from snapcode.config import Settings
-    from snapcode.pipeline import recognize
+    from pluck.config import Settings
+    from pluck.pipeline import recognize
 
     result = recognize(render(CODE, dark, numbers), Settings(engine="windows"))
     assert result.engine == "windows"
@@ -51,7 +51,7 @@ def test_round_trip(dark, numbers):
 
 def test_normalize_keeps_coloured_and_dim_text():
     """Syntax colours, dim comments and diff line backgrounds all become dark ink on white."""
-    from snapcode.engines.windows_ocr import _normalize
+    from pluck.engines.windows_ocr import _normalize
 
     img = Image.new("RGB", (60, 30), (30, 30, 30))
     draw = ImageDraw.Draw(img)

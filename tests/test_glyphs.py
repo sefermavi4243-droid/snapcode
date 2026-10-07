@@ -3,8 +3,8 @@
 import pytest
 from PIL import Image, ImageDraw, ImageFont
 
-from snapcode import glyphs
-from snapcode.postprocess import OcrLine, OcrWord, build_code
+from pluck import glyphs
+from pluck.postprocess import OcrLine, OcrWord, build_code
 
 pytestmark = pytest.mark.skipif(
     not (glyphs.FONT_DIR / "consola.ttf").exists(), reason="needs the Windows Consolas font"

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from snapcode import ide, languages
+from pluck import ide, languages
 
 FAKE = (
     ide.Ide("vscode", "VS Code", "code.exe"),

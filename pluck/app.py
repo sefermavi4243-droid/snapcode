@@ -350,7 +350,7 @@ def run_gui() -> int:
     app.setWindowIcon(app_icon())
     load_brand_fonts()
 
-    lock = QLockFile(str(Path(data_dir()) / "snapcode.lock"))
+    lock = QLockFile(str(Path(data_dir()) / "pluck.lock"))
     if not lock.tryLock(100):
         QMessageBox.information(None, APP_NAME, t("{app} zaten çalışıyor.", app=APP_NAME))
         return 0

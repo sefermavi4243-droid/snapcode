@@ -116,7 +116,7 @@ pluck ekran.png --ide pycharm        # belirli IDE'de aç
 ## Mimari
 
 ```
-snapcode/
+pluck/
 ├── app.py              tepsi uygulaması, erken tanıma, pano izleme
 ├── hotkey.py           Win32 global kısayol dinleyicisi
 ├── pipeline.py         görüntü → kod (Qt'den bağımsız; CLI ve testler kullanır)

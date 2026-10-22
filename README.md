@@ -117,17 +117,28 @@ pluck ekran.png --ide pycharm        # belirli IDE'de aç
 
 ```
 pluck/
+├── __main__.py         komut satırı giriş noktası
 ├── app.py              tepsi uygulaması, erken tanıma, pano izleme
 ├── hotkey.py           Win32 global kısayol dinleyicisi
 ├── pipeline.py         görüntü → kod (Qt'den bağımsız; CLI ve testler kullanır)
 ├── postprocess.py      geometri tabanlı kod yeniden kurma
+├── glyphs.py           OCR'ın atladığı karakterleri glif şablonlarıyla piksellerden okuma
+├── codefix.py          parantez eşleştirme ve isim tutarlılığıyla benzer karakter düzeltme
 ├── languages.py        ağırlıklı imza + Pygments ile dil tespiti
 ├── history.py          SQLite geçmiş
 ├── ide.py              kurulu IDE'leri bulma ve kodu IDE'de açma
+├── config.py           %APPDATA%\Pluck altında JSON ayarlar, eski adlardan taşıma
+├── autostart.py        "Windows ile başlat" (kullanıcı Run kayıt anahtarı)
+├── i18n.py             Türkçe / İngilizce arayüz metinleri
 ├── engines/
 │   ├── windows_ocr.py  Windows.Media.Ocr + piksel sondası
 │   └── claude_vision.py
-└── ui/                 seçim ekranı, düzenleyici, geçmiş, ayarlar, tema
+└── ui/
+    ├── capture.py      seçim ekranı ve araç çubuğu
+    ├── editor.py       ekran görüntüsü + kod düzenleyici
+    ├── history_window.py
+    ├── settings_dialog.py
+    └── theme.py        stil, sözdizimi renklendirme, simgeler, bildirim
 ```
 
 ## Testler

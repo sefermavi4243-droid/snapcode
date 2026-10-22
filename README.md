@@ -144,11 +144,18 @@ pluck/
 ## Testler
 
 ```powershell
-pip install pytest
+pip install -e .[dev]
 pytest
 ```
 
 `tests/test_windows_ocr.py`, Consolas ile kod çizip gerçek Windows OCR motorundan birebir aynı kodun (girinti, satır numarası temizliği, koyu tema dahil) geri geldiğini doğrular.
+
+OCR doğruluğunu ölçmek için `tools/ocr_bench.py`, kod parçalarını farklı eş aralıklı yazı tipleri, boyutlar ve temalarla çizip gerçek tanıma hattından geçirir; karakter hata oranını (CER), birebir doğru satır oranını ve en sık hataları raporlar:
+
+```powershell
+python tools/ocr_bench.py
+python tools/ocr_bench.py --renderer qt -v
+```
 
 ## Lisans
 
